@@ -201,47 +201,67 @@ pipeline {
 
   post {
     always {
-      // Clean up workspace
-      cleanWs()
-      
-      // Clean up Docker resources
-      script {
-        try {
-          bat 'docker system prune -f --volumes'
-        } catch (Exception e) {
-          echo 'Failed to clean up Docker resources'
+      node {
+        // Clean up workspace
+        cleanWs()
+        
+        // Clean up Docker resources
+        script {
+          try {
+            withCredentials([usernamePassword(
+              credentialsId: 'docker-hub-credentials',
+              usernameVariable: 'DOCKER_USER',
+              passwordVariable: 'DOCKER_PASS'
+            )]) {
+              bat 'docker system prune -f --volumes'
+            }
+          } catch (Exception e) {
+            echo 'Failed to clean up Docker resources'
+          }
         }
       }
     }
     
     success {
-      script {
-        if (env.BRANCH_NAME == 'main') {
-          // Notify success (e.g., Slack, email)
-          echo '✅ Pipeline succeeded!'
+      node {
+        script {
+          if (env.BRANCH_NAME == 'main') {
+            // Notify success (e.g., Slack, email)
+            echo '✅ Pipeline succeeded!'
+          }
         }
       }
     }
     
     failure {
-      script {
-        // Notify failure (e.g., Slack, email)
-        echo '❌ Pipeline failed!'
-        
-        // Archive artifacts for debugging
-        archiveArtifacts artifacts: '**/test-results/**/*.xml', allowEmptyArchive: true
-        archiveArtifacts artifacts: '**/coverage.xml', allowEmptyArchive: true
+      node {
+        script {
+          // Notify failure (e.g., Slack, email)
+          echo '❌ Pipeline failed!'
+          
+          // Archive artifacts for debugging
+          archiveArtifacts artifacts: '**/test-results/**/*.xml', allowEmptyArchive: true
+          archiveArtifacts artifacts: '**/coverage.xml', allowEmptyArchive: true
+        }
       }
     }
     
     cleanup {
-      // Clean up Docker resources
-      script {
-        try {
-          bat 'docker-compose down --remove-orphans || echo "No containers to stop"'
-          bat 'docker system prune -f --volumes || echo "No Docker resources to clean"'
-        } catch (Exception e) {
-          echo 'Error during cleanup'
+      node {
+        // Clean up Docker resources
+        script {
+          try {
+            withCredentials([usernamePassword(
+              credentialsId: 'docker-hub-credentials',
+              usernameVariable: 'DOCKER_USER',
+              passwordVariable: 'DOCKER_PASS'
+            )]) {
+              bat 'docker-compose down --remove-orphans || echo "No containers to stop"'
+              bat 'docker system prune -f --volumes || echo "No Docker resources to clean"'
+            }
+          } catch (Exception e) {
+            echo 'Error during cleanup'
+          }
         }
       }
     }
