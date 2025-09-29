@@ -162,16 +162,18 @@ pipeline {
       }
       steps {
         script {
-          // Build and tag the Docker image
-          docker.withRegistry('https://index.docker.io/v1/', 'docker-hub-credentials') {
-            def image = docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
-            // Push to Docker Hub
-            image.push()
-            // Also tag as 'latest' for the main branch
-            if (env.BRANCH_NAME == 'main') {
-              image.push('latest')
-            }
+          // Build the Docker image locally
+          def imageName = "${DOCKER_IMAGE}:${DOCKER_TAG}"
+          bat "docker build -t ${imageName} ."
+          
+          // Tag as 'latest' for the main branch
+          if (env.BRANCH_NAME == 'main') {
+            bat "docker tag ${imageName} ${DOCKER_IMAGE}:latest"
+            echo "Image tagged as latest"
           }
+          
+          // List all images for debugging
+          bat 'docker images'
         }
       }
     }
