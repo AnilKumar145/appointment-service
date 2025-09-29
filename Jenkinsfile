@@ -1,5 +1,10 @@
 pipeline {
-  agent any
+  agent {
+    docker {
+      image 'python:3.11-slim'
+      args '-v ${WORKSPACE}:/app -w /app'
+    }
+  }
 
   environment {
     DOCKER_IMAGE = 'appointment-service'
@@ -32,69 +37,16 @@ pipeline {
       steps {
         script {
           echo 'Setting up Python environment...'
-          
-          // Check if virtual environment already exists
-          if (fileExists("${VENV_PATH}")) {
-            echo 'Virtual environment already exists. Skipping creation.'
-          } else {
-            echo 'Creating new virtual environment...'
-            
-            // Try to find a working Python
-            def pythonExe = 'python'
-            def pythonFound = false
-            
-            // Check if system Python works
-            def pythonCheck = bat(returnStatus: true, script: 'python --version')
-            if (pythonCheck == 0) {
-              // Verify Python can import modules
-              def verifyPython = bat(returnStatus: true, script: 'python -c "import sys; print(sys.executable)"')
-              if (verifyPython == 0) {
-                pythonFound = true
-              }
-            }
-            
-            if (!pythonFound) {
-              // Try known Python locations
-              def pythonPaths = [
-                'C:\\Python39\\python.exe',
-                'C:\\Python310\\python.exe',
-                'C:\\Python311\\python.exe',
-                'C:\\Program Files\\Python39\\python.exe',
-                'C:\\Program Files\\Python310\\python.exe',
-                'C:\\Program Files\\Python311\\python.exe'
-              ]
-              
-              for (path in pythonPaths) {
-                echo "Trying Python at: ${path}"
-                def check = bat(returnStatus: true, script: "\"${path}\" -c \"import sys; print(sys.executable)\"")
-                if (check == 0) {
-                  pythonExe = "\"${path}\""
-                  pythonFound = true
-                  echo "Found working Python at: ${path}"
-                  break
-                }
-              }
-              
-              if (!pythonFound) {
-                error('No working Python installation found. Please install Python 3.8+ and ensure it\'s in the system PATH.')
-              }
-            }
-            
-            // Create virtual environment
-            try {
-              bat """
-                ${pythonExe} -m venv ${VENV_PATH}
-                ${PIP} install --upgrade pip setuptools wheel
-                ${PIP} install -r requirements.txt
-                ${PIP} install -r requirements-dev.txt
-              """
-            } catch (Exception e) {
-              error("Failed to set up Python environment: ${e.message}")
-            }
-          }
+          sh """
+            python -m venv ${VENV_PATH}
+            . ${VENV_PATH}/bin/activate
+            pip install --upgrade pip setuptools wheel
+            pip install -r requirements.txt
+            pip install -r requirements-dev.txt
+          """
           
           // Verify the virtual environment works
-          def venvCheck = bat(returnStatus: true, script: "${PYTHON} -c \"import sys; print('Python version:', sys.version)\"")
+          def venvCheck = sh(script: "${VENV_PATH}/bin/python -c \"import sys; print('Python version:', sys.version)\"", returnStatus: true)
           if (venvCheck != 0) {
             error('Virtual environment setup failed. Please check the logs.')
           }
