@@ -15,7 +15,7 @@ mypy==1.5.1
 
 # Security
 bandit==1.7.5
-safety==2.3.5
+safety>=2.4.1  # Updated to be compatible with packaging>=22.0
 
 # Documentation
 mkdocs==1.5.2
