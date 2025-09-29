@@ -201,7 +201,7 @@ pipeline {
 
   post {
     always {
-      node('master') {
+      node() {
         // Clean up workspace
         cleanWs()
         
@@ -223,7 +223,7 @@ pipeline {
     }
     
     success {
-      node('master') {
+      node() {
         script {
           if (env.BRANCH_NAME == 'main') {
             // Notify success (e.g., Slack, email)
@@ -234,7 +234,7 @@ pipeline {
     }
     
     failure {
-      node('master') {
+      node() {
         script {
           // Notify failure (e.g., Slack, email)
           echo '❌ Pipeline failed!'
@@ -247,7 +247,7 @@ pipeline {
     }
     
     cleanup {
-      node('master') {
+      node() {
         // Clean up Docker resources
         script {
           try {
