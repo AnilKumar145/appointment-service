@@ -2,26 +2,17 @@ pipeline {
   agent any
 
   environment {
-    // Environment Variables
     DOCKER_IMAGE = 'appointment-service'
     DOCKER_TAG = "${env.BUILD_NUMBER}"
     VENV_PATH = "${WORKSPACE}/venv"
     PYTHON = "${VENV_PATH}/Scripts/python"
     PIP = "${VENV_PATH}/Scripts/pip"
-    
-    // Credentials (stored in Jenkins Credentials Store)
-    DOCKERHUB_CREDENTIALS = credentials('docker-hub-credentials')
-    
-    // Environment-specific configurations
-    ENV_FILE = '.env.test'  // Default to test environment
+    ENV_FILE = '.env.test'
   }
 
   options {
-    // Discard old builds to save space
     buildDiscarder(logRotator(numToKeepStr: '10'))
-    // Timeout after 30 minutes
     timeout(time: 30, unit: 'MINUTES')
-    // Add timestamps to console output
     timestamps()
   }
 
@@ -40,7 +31,6 @@ pipeline {
     stage('Setup Python Environment') {
       steps {
         script {
-          // Create virtual environment
           bat """
             python -m venv ${VENV_PATH}
             ${PIP} install --upgrade pip setuptools wheel
@@ -61,7 +51,6 @@ pipeline {
             }
           }
         }
-        
         stage('Run Black') {
           steps {
             script {
@@ -69,7 +58,6 @@ pipeline {
             }
           }
         }
-        
         stage('Run Isort') {
           steps {
             script {
@@ -89,7 +77,6 @@ pipeline {
             }
           }
         }
-        
         stage('Dependency Check') {
           steps {
             script {
@@ -104,7 +91,6 @@ pipeline {
     stage('Unit Tests') {
       steps {
         script {
-          // Run unit tests with coverage
           bat """
             ${PYTHON} -m pytest tests/unit \
               --cov=app \
@@ -117,9 +103,7 @@ pipeline {
       }
       post {
         always {
-          // Publish test results
           junit 'test-results/unit-tests.xml'
-          // Publish coverage report
           publishHTML(target: [
             allowMissing: false,
             alwaysLinkToLastBuild: false,
@@ -135,10 +119,7 @@ pipeline {
     stage('Integration Tests') {
       steps {
         script {
-          // Start test containers
           bat 'docker-compose -f docker-compose.test.yml up -d --build'
-          
-          // Wait for services to be ready
           bat """
             ${PYTHON} -m pytest tests/integration \
               -v \
@@ -148,9 +129,7 @@ pipeline {
       }
       post {
         always {
-          // Stop test containers
           bat 'docker-compose -f docker-compose.test.yml down --volumes --remove-orphans'
-          // Publish test results
           junit 'test-results/integration-tests.xml'
         }
       }
@@ -158,21 +137,17 @@ pipeline {
 
     stage('Build Docker Image') {
       when {
-        branch 'main'  // Only build for main branch
+        branch 'main'
       }
       steps {
         script {
-          // Build the Docker image locally
           def imageName = "${DOCKER_IMAGE}:${DOCKER_TAG}"
           bat "docker build -t ${imageName} ."
-          
-          // Tag as 'latest' for the main branch
+
           if (env.BRANCH_NAME == 'main') {
             bat "docker tag ${imageName} ${DOCKER_IMAGE}:latest"
             echo "Image tagged as latest"
           }
-          
-          // List all images for debugging
           bat 'docker images'
         }
       }
@@ -180,20 +155,14 @@ pipeline {
 
     stage('Deploy to Staging') {
       when {
-        branch 'main'  // Only deploy to staging from main branch
+        branch 'main'
       }
       steps {
         script {
-          // Deploy to staging environment
           withEnv(['ENV_FILE=.env.staging']) {
-            // Stop and remove old containers
             bat 'docker-compose -f docker-compose.staging.yml down --remove-orphans'
-            
-            // Pull and start new containers
             bat 'docker-compose -f docker-compose.staging.yml pull'
             bat 'docker-compose -f docker-compose.staging.yml up -d'
-            
-            // Run database migrations
             bat 'docker-compose -f docker-compose.staging.yml exec app alembic upgrade head'
           }
         }
@@ -206,41 +175,28 @@ pipeline {
       node('built-in') {
         script {
           try {
-            // Clean up workspace
             cleanWs()
-            
-            // Clean up Docker resources
-            try {
-              bat 'docker system prune -f --volumes || echo "Docker cleanup failed, but continuing..."'
-            } catch (Exception e) {
-              echo 'Warning: Docker cleanup failed: ' + e.message
-            }
+            bat 'docker system prune -f --volumes || echo "Docker cleanup failed, but continuing..."'
           } catch (Exception e) {
             echo 'Error in always post action: ' + e.toString()
           }
         }
       }
     }
-    
     success {
       node('built-in') {
         script {
           if (env.BRANCH_NAME == 'main') {
-            // Notify success (e.g., Slack, email)
             echo '✅ Pipeline succeeded!'
           }
         }
       }
     }
-    
     failure {
       node('built-in') {
         script {
           try {
-            // Notify failure (e.g., Slack, email)
             echo '❌ Pipeline failed!'
-            
-            // Archive artifacts for debugging if they exist
             archiveArtifacts artifacts: '**/test-results/**/*.xml', allowEmptyArchive: true
             archiveArtifacts artifacts: '**/coverage.xml', allowEmptyArchive: true
           } catch (Exception e) {
@@ -249,19 +205,15 @@ pipeline {
         }
       }
     }
-    
     cleanup {
       node('built-in') {
         script {
           try {
-            // Only try to run docker-compose if the file exists
             if (fileExists('docker-compose.yml')) {
               bat 'docker-compose down --remove-orphans || echo "No containers to stop"'
             } else {
               echo 'No docker-compose.yml found, skipping container cleanup'
             }
-            
-            // Clean up any dangling Docker resources
             bat 'docker system prune -f --volumes || echo "No Docker resources to clean"'
           } catch (Exception e) {
             echo 'Warning: Error during Docker cleanup: ' + e.message
