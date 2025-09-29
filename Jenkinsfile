@@ -5,13 +5,16 @@ pipeline {
     DOCKER_IMAGE = 'appointment-service'
     DOCKER_TAG = "${env.BUILD_NUMBER}"
     VENV_PATH = "${WORKSPACE}/venv"
-    PYTHON = "${VENV_PATH}/Scripts/python.exe"
-    PIP = "${VENV_PATH}/Scripts/pip.exe"
-    SYSTEM_PYTHON = "C:\\Python311\\python.exe"   // 👈 define fixed system Python
+    PYTHON = "${VENV_PATH}/Scripts/python"
+    PIP = "${VENV_PATH}/Scripts/pip"
     ENV_FILE = '.env.test'
   }
 
-  ...
+  options {
+    buildDiscarder(logRotator(numToKeepStr: '10'))
+    timeout(time: 30, unit: 'MINUTES')
+    timestamps()
+  }
 
   stages {
     stage('Checkout') {
@@ -29,20 +32,74 @@ pipeline {
       steps {
         script {
           echo 'Setting up Python environment...'
-
-          // Always use system Python from C:\Python311
-          bat """
-            "${SYSTEM_PYTHON}" --version
-            "${SYSTEM_PYTHON}" -m venv ${VENV_PATH}
-            "${PYTHON}" -m pip install --upgrade pip setuptools wheel
-            "${PIP}" install -r requirements.txt
-            "${PIP}" install -r requirements-dev.txt
-          """
-
-          // Verify the virtual environment
-          bat "\"${PYTHON}\" -c \"import sys; print('Python version:', sys.version)\""
-
-          echo '✅ Python environment setup completed successfully.'
+          
+          // Try to find a working Python
+          def pythonExe = 'python'
+          def pythonFound = false
+          
+          // Check if system Python works
+          try {
+            def pythonVersion = bat(script: 'python --version', returnStdout: true).trim()
+            echo "Found Python version: ${pythonVersion}"
+            
+            // Verify Python can import modules
+            bat 'python -c "import sys; print(sys.executable)"'
+            pythonFound = true
+          } catch (Exception e) {
+            echo 'Python not found in PATH or not working properly'
+          }
+          
+          if (!pythonFound) {
+            // Try known Python locations
+            def pythonPaths = [
+              'C:\\Python39\\python.exe',
+              'C:\\Python310\\python.exe',
+              'C:\\Python311\\python.exe',
+              'C:\\Program Files\\Python39\\python.exe',
+              'C:\\Program Files\\Python310\\python.exe',
+              'C:\\Program Files\\Python311\\python.exe'
+            ]
+            
+            for (path in pythonPaths) {
+              try {
+                echo "Trying Python at: ${path}"
+                def version = bat(script: "\"${path}\" --version", returnStdout: true).trim()
+                echo "Found Python version: ${version}"
+                bat "\"${path}\" -c \"import sys; print(sys.executable)\""
+                pythonExe = "\"${path}\""
+                pythonFound = true
+                echo "Using Python at: ${path}"
+                break
+              } catch (Exception e) {
+                echo "Python not found at ${path}"
+              }
+            }
+            
+            if (!pythonFound) {
+              error('No working Python installation found. Please install Python 3.8+ and ensure it\'s in the system PATH.')
+            }
+          }
+          
+          // Create virtual environment
+          try {
+            bat """
+              ${pythonExe} -m venv ${VENV_PATH}
+              ${PIP} install --upgrade pip setuptools wheel
+              ${PIP} install -r requirements.txt
+              ${PIP} install -r requirements-dev.txt
+            """
+          } catch (Exception e) {
+            error("Failed to set up Python environment: ${e.message}")
+          }
+          
+          // Verify the virtual environment works
+          try {
+            bat "${PYTHON} -c \"import sys; print('Python version:', sys.version)\""
+          } catch (Exception e) {
+            error('Virtual environment setup failed. Please check the logs.')
+          }
+          
+          echo 'Python environment setup completed successfully.'
         }
       }
     }
