@@ -31,8 +31,34 @@ pipeline {
     stage('Setup Python Environment') {
       steps {
         script {
+          // Try to find Python in common locations
+          def pythonExe = 'python'
+          def pythonPaths = [
+            'C:\\Python39\\python.exe',
+            'C:\\Python310\\python.exe',
+            'C:\\Python311\\python.exe',
+            'C:\\Program Files\\Python39\\python.exe',
+            'C:\\Program Files\\Python310\\python.exe',
+            'C:\\Program Files\\Python311\\python.exe'
+          ]
+          
+          // Check if Python is in PATH
+          def pythonCheck = bat(returnStatus: true, script: 'python --version')
+          
+          // If Python is not in PATH, try to find it
+          if (pythonCheck != 0) {
+            for (path in pythonPaths) {
+              def check = bat(returnStatus: true, script: "\"${path}\" --version")
+              if (check == 0) {
+                pythonExe = "\"${path}\""
+                break
+              }
+            }
+          }
+          
+          // Create virtual environment
           bat """
-            python -m venv ${VENV_PATH}
+            ${pythonExe} -m venv ${VENV_PATH}
             ${PIP} install --upgrade pip setuptools wheel
             ${PIP} install -r requirements.txt
             ${PIP} install -r requirements-dev.txt
