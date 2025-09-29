@@ -201,59 +201,71 @@ pipeline {
 
   post {
     always {
-      script {
-        // Clean up workspace
-        cleanWs()
-        
-        // Clean up Docker resources
-        try {
-          withCredentials([usernamePassword(
-            credentialsId: 'docker-hub-credentials',
-            usernameVariable: 'DOCKER_USER',
-            passwordVariable: 'DOCKER_PASS'
-          )]) {
-            bat 'docker system prune -f --volumes'
+      node('built-in') {
+        script {
+          try {
+            // Clean up workspace
+            cleanWs()
+            
+            // Clean up Docker resources
+            withCredentials([usernamePassword(
+              credentialsId: 'docker-hub-credentials',
+              usernameVariable: 'DOCKER_USER',
+              passwordVariable: 'DOCKER_PASS'
+            )]) {
+              bat 'docker system prune -f --volumes'
+            }
+          } catch (Exception e) {
+            echo 'Failed to clean up Docker resources: ' + e.toString()
           }
-        } catch (Exception e) {
-          echo 'Failed to clean up Docker resources'
         }
       }
     }
     
     success {
-      script {
-        if (env.BRANCH_NAME == 'main') {
-          // Notify success (e.g., Slack, email)
-          echo '✅ Pipeline succeeded!'
+      node('built-in') {
+        script {
+          if (env.BRANCH_NAME == 'main') {
+            // Notify success (e.g., Slack, email)
+            echo '✅ Pipeline succeeded!'
+          }
         }
       }
     }
     
     failure {
-      script {
-        // Notify failure (e.g., Slack, email)
-        echo '❌ Pipeline failed!'
-        
-        // Archive artifacts for debugging
-        archiveArtifacts artifacts: '**/test-results/**/*.xml', allowEmptyArchive: true
-        archiveArtifacts artifacts: '**/coverage.xml', allowEmptyArchive: true
+      node('built-in') {
+        script {
+          try {
+            // Notify failure (e.g., Slack, email)
+            echo '❌ Pipeline failed!'
+            
+            // Archive artifacts for debugging
+            archiveArtifacts artifacts: '**/test-results/**/*.xml', allowEmptyArchive: true
+            archiveArtifacts artifacts: '**/coverage.xml', allowEmptyArchive: true
+          } catch (Exception e) {
+            echo 'Error in failure handling: ' + e.toString()
+          }
+        }
       }
     }
     
     cleanup {
-      script {
-        // Clean up Docker resources
-        try {
-          withCredentials([usernamePassword(
-            credentialsId: 'docker-hub-credentials',
-            usernameVariable: 'DOCKER_USER',
-            passwordVariable: 'DOCKER_PASS'
-          )]) {
-            bat 'docker-compose down --remove-orphans || echo "No containers to stop"'
-            bat 'docker system prune -f --volumes || echo "No Docker resources to clean"'
+      node('built-in') {
+        script {
+          try {
+            // Clean up Docker resources
+            withCredentials([usernamePassword(
+              credentialsId: 'docker-hub-credentials',
+              usernameVariable: 'DOCKER_USER',
+              passwordVariable: 'DOCKER_PASS'
+            )]) {
+              bat 'docker-compose down --remove-orphans || echo "No containers to stop"'
+              bat 'docker system prune -f --volumes || echo "No Docker resources to clean"'
+            }
+          } catch (Exception e) {
+            echo 'Error during cleanup: ' + e.toString()
           }
-        } catch (Exception e) {
-          echo 'Error during cleanup'
         }
       }
     }
