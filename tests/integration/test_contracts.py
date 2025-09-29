@@ -5,6 +5,7 @@ Note: This is a lightweight contract check without external tools. It validates:
 - Key paths exist
 - Response for list endpoint contains required keys
 """
+
 import pytest
 
 

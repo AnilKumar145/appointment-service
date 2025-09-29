@@ -6,6 +6,7 @@ Shared pytest fixtures for the appointment-service test suite.
 - Exposes a `client` TestClient for API tests
 - Provides helper factory to build valid Appointment payloads
 """
+
 import os
 import asyncio
 from datetime import date, time, timedelta, datetime
@@ -91,10 +92,12 @@ def db_session(test_engine):
 @pytest.fixture(autouse=True)
 def _override_get_session(monkeypatch, db_session):
     """Override the FastAPI dependency to use the test session."""
+
     def _get_session_override():
         yield db_session
 
     from app.data.models import base as base_module
+
     monkeypatch.setattr(base_module, "get_session", _get_session_override)
 
     # Also apply to the app dependency overrides
@@ -123,7 +126,14 @@ def _monkeypatch_helpers(monkeypatch):
         suffix = (int(ns * 1_000_000) + next(_apt_counter)) % 1_000_000
         return f"APT-{year}-{suffix:06d}"
 
-    def _validate_conflict(session, doctor_id, appointment_date, start_time, end_time, exclude_appointment_id=None):
+    def _validate_conflict(
+        session,
+        doctor_id,
+        appointment_date,
+        start_time,
+        end_time,
+        exclude_appointment_id=None,
+    ):
         stmt = select(Appointment).where(
             Appointment.doctor_id == doctor_id,
             Appointment.appointment_date == appointment_date,
@@ -133,17 +143,24 @@ def _monkeypatch_helpers(monkeypatch):
         for appt in rows:
             if exclude_appointment_id and appt.id == exclude_appointment_id:
                 continue
-            if (start_time < appt.appointment_end_time and end_time > appt.appointment_start_time):
+            if (
+                start_time < appt.appointment_end_time
+                and end_time > appt.appointment_start_time
+            ):
                 return True
         return False
 
     # Patch functions on the helpers module
     monkeypatch.setattr(helpers_mod, "generate_appointment_id", _gen_id)
-    monkeypatch.setattr(helpers_mod, "validate_appointment_conflict", _validate_conflict)
+    monkeypatch.setattr(
+        helpers_mod, "validate_appointment_conflict", _validate_conflict
+    )
 
     # Also patch the symbols imported into appointment_service at import time
     monkeypatch.setattr(service_mod, "generate_appointment_id", _gen_id)
-    monkeypatch.setattr(service_mod, "validate_appointment_conflict", _validate_conflict)
+    monkeypatch.setattr(
+        service_mod, "validate_appointment_conflict", _validate_conflict
+    )
 
 
 @pytest.fixture()
@@ -183,6 +200,7 @@ def valid_appointment_payload() -> Dict:
 @pytest.fixture()
 def create_appointment(client, valid_appointment_payload):
     """Helper to create an appointment via API and return the response JSON."""
+
     def _create(**overrides):
         # Start from base and make defaults unique unless explicitly overridden
         base = dict(valid_appointment_payload)
@@ -194,7 +212,9 @@ def create_appointment(client, valid_appointment_payload):
 
         # Unique time slots within business hours to avoid conflict
         # Cycle through 9:00 to 17:30 in 30-minute increments
-        step = (next(_apt_counter) % 17)  # 17 half-hours from 9:00 to 17:30 exclusive of 18:00 end
+        step = (
+            next(_apt_counter) % 17
+        )  # 17 half-hours from 9:00 to 17:30 exclusive of 18:00 end
         start_hour = 9 + (step // 2)
         start_minute = (step % 2) * 30
         start_t = time(start_hour, start_minute)
@@ -212,4 +232,5 @@ def create_appointment(client, valid_appointment_payload):
         resp = client.post("/api/appointments", json=payload)
         assert resp.status_code in (200, 201), resp.text
         return resp.json()
+
     return _create

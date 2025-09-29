@@ -2,6 +2,7 @@
 
 These are lightweight stress scenarios and can be scaled by increasing USERS/ROUNDS.
 """
+
 import asyncio
 from datetime import date, datetime, timedelta, time
 import uuid
@@ -75,4 +76,6 @@ async def test_stress_create_list_delete_cycles(app):
             assert lst.status_code == 200
 
             # Delete many concurrently
-            await asyncio.gather(*[ac.delete(f"/api/appointments/{aid}") for aid in ids])
+            await asyncio.gather(
+                *[ac.delete(f"/api/appointments/{aid}") for aid in ids]
+            )

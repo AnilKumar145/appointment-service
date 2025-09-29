@@ -1,4 +1,5 @@
 """Unit tests for `AppointmentRepository` data access layer."""
+
 from datetime import date, time
 
 from app.data.repositories.appointment_repository import AppointmentRepository

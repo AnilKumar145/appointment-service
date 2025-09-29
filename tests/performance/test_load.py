@@ -3,6 +3,7 @@
 These tests simulate concurrent appointment creations and reads against the ASGI app
 without external tooling. Scale the `USERS` value to increase load.
 """
+
 import asyncio
 from datetime import date, time, datetime
 import uuid

@@ -2,6 +2,7 @@
 
 Covers Appointment model defaults, enum constraints, and basic field integrity.
 """
+
 from datetime import date, time
 
 from app.data.models.appointment import Appointment, AppointmentStatus
@@ -33,6 +34,9 @@ def test_appointment_defaults_and_fields():
 def test_appointment_status_enum_values():
     """Enum must include expected statuses and be string-based."""
     assert set([s.value for s in AppointmentStatus]) == {
-        "SCHEDULED", "COMPLETED", "CANCELLED", "PENDING"
+        "SCHEDULED",
+        "COMPLETED",
+        "CANCELLED",
+        "PENDING",
     }
     assert isinstance(AppointmentStatus.SCHEDULED.value, str)

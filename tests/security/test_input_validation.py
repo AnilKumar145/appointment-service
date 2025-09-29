@@ -6,6 +6,7 @@ Covers:
 - SQL injection-like payloads in text fields and IDs
 - Edge boundaries for time and date
 """
+
 from datetime import date, time, timedelta
 import pytest
 
@@ -16,12 +17,17 @@ import pytest
     [
         ({"doctor_name": ""}, 422),
         ({"patient_name": "   "}, 422),
-        ({"appointment_start_time": "10:30:00", "appointment_end_time": "10:00:00"}, 422),
+        (
+            {"appointment_start_time": "10:30:00", "appointment_end_time": "10:00:00"},
+            422,
+        ),
         ({"appointment_date": (date.today() - timedelta(days=1)).isoformat()}, 422),
         ({"purpose_of_visit": "x"}, 422),  # too short
     ],
 )
-def test_create_validation_errors(client, valid_appointment_payload, overrides, expected_status):
+def test_create_validation_errors(
+    client, valid_appointment_payload, overrides, expected_status
+):
     payload = {**valid_appointment_payload, **overrides}
     r = client.post("/api/appointments", json=payload)
     assert r.status_code == expected_status
@@ -30,9 +36,19 @@ def test_create_validation_errors(client, valid_appointment_payload, overrides, 
 @pytest.mark.security
 @pytest.mark.parametrize(
     "field",
-    ["doctor_id", "patient_id", "facility_id", "doctor_name", "patient_name", "purpose_of_visit", "description"],
+    [
+        "doctor_id",
+        "patient_id",
+        "facility_id",
+        "doctor_name",
+        "patient_name",
+        "purpose_of_visit",
+        "description",
+    ],
 )
-def test_sql_injection_like_inputs_are_not_executed(client, valid_appointment_payload, field):
+def test_sql_injection_like_inputs_are_not_executed(
+    client, valid_appointment_payload, field
+):
     # Attempt to inject SQL-like strings into fields should not crash nor execute
     payload = {**valid_appointment_payload}
     payload[field] = "1; DROP TABLE appointments; --"
@@ -42,7 +58,9 @@ def test_sql_injection_like_inputs_are_not_executed(client, valid_appointment_pa
 
 
 @pytest.mark.security
-@pytest.mark.xfail(reason="Service does not validate end-after-start on update; only create schema enforces it")
+@pytest.mark.xfail(
+    reason="Service does not validate end-after-start on update; only create schema enforces it"
+)
 def test_update_rejects_invalid_time_window(client, create_appointment):
     created = create_appointment()
     appt_id = created["appointment_id"]

@@ -3,6 +3,7 @@
 Note: No role-based authorization or rate limiting is implemented in the service.
 We include behavioral checks and xfail markers to document expectations once features exist.
 """
+
 import itertools
 import pytest
 
@@ -21,7 +22,9 @@ def test_role_based_access_control_enforced(client, valid_appointment_payload):
 
 
 @pytest.mark.security
-def test_basic_abuse_prevention_no_crash_under_repeated_requests(client, valid_appointment_payload):
+def test_basic_abuse_prevention_no_crash_under_repeated_requests(
+    client, valid_appointment_payload
+):
     # Rapid requests should not crash the service (rate limit not enforced yet)
     for _ in range(20):
         r = client.get("/api/appointments")

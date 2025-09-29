@@ -1,4 +1,5 @@
 """Unit tests for custom exceptions in `app/core/exceptions/custom_exceptions.py`."""
+
 import pytest
 
 from app.core.exceptions.custom_exceptions import (

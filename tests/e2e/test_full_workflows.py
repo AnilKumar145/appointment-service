@@ -8,6 +8,7 @@ Flow covered:
 5) Verify counts
 6) Delete and ensure not found
 """
+
 from datetime import date, time
 
 
@@ -53,11 +54,15 @@ def test_full_crud_workflow(client, valid_appointment_payload):
     assert upd_status.json()["status"] == "COMPLETED"
 
     # 5) Verify counts
-    doc_completed = client.get(f"/api/appointments/{doctor_id}/doctorAppointments/COMPLETED")
+    doc_completed = client.get(
+        f"/api/appointments/{doctor_id}/doctorAppointments/COMPLETED"
+    )
     assert doc_completed.status_code == 200
     assert isinstance(doc_completed.json().get("count", 0), int)
 
-    pat_completed = client.get(f"/api/appointments/{patient_id}/patientAppointments/COMPLETED")
+    pat_completed = client.get(
+        f"/api/appointments/{patient_id}/patientAppointments/COMPLETED"
+    )
     assert pat_completed.status_code == 200
 
     # 6) Delete and confirm

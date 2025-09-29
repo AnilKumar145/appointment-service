@@ -10,7 +10,7 @@ app = FastAPI(
     description="Enterprise Healthcare Appointment Management Microservice",
     version="1.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
 )
 
 # Configure CORS
@@ -25,11 +25,13 @@ app.add_middleware(
 # Include API routers
 app.include_router(appointments.router)
 
+
 # Update the on_startup function
 @app.on_event("startup")
 async def on_startup():
     try:
         from app.data.models.base import create_db_and_tables
+
         create_db_and_tables()
         print("🚀 Starting Appointment Management Service...")
         print("📅 Appointment management endpoints ready")
@@ -49,24 +51,27 @@ async def root():
         "version": "1.0.0",
         "status": "running",
         "services": ["appointment-management"],
-        "docs": "Go to /docs for interactive API documentation"
+        "docs": "Go to /docs for interactive API documentation",
     }
+
 
 @app.get("/health")
 async def health_check():
     return {
-        "status": "healthy", 
+        "status": "healthy",
         "service": "appointment-management",
         "database": "connected",
-        "modules": ["appointments"]
+        "modules": ["appointments"],
     }
+
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(
-        "main:app", 
+        "main:app",
         host="0.0.0.0",  # Changed to 0.0.0.0 for Docker compatibility
-        port=8007,       # Updated to match Docker and docker-compose
+        port=8007,  # Updated to match Docker and docker-compose
         reload=True,
-        log_level="info"
+        log_level="info",
     )

@@ -54,8 +54,10 @@ DATABASE_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST
 # Create SQLAlchemy engine
 engine = create_engine(DATABASE_URL, echo=True)  # Set echo=False in production
 
+
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
+
 
 def get_session():
     with Session(engine) as session:

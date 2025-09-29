@@ -1,4 +1,5 @@
 """Integration tests for pagination and filter-like parameters on list endpoints."""
+
 import pytest
 
 
@@ -10,11 +11,13 @@ import pytest
         (0, 1, 200),
         (0, 1000, 200),
         (-1, 10, 422),  # Query constraint ge=0
-        (0, 0, 422),    # Query constraint ge=1
-        (0, 1001, 422), # Query constraint le=1000
+        (0, 0, 422),  # Query constraint ge=1
+        (0, 1001, 422),  # Query constraint le=1000
     ],
 )
-def test_list_pagination_edges(client, create_appointment, skip, limit, expected_status):
+def test_list_pagination_edges(
+    client, create_appointment, skip, limit, expected_status
+):
     # Seed some data
     for _ in range(3):
         create_appointment()
