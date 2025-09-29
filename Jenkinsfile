@@ -208,15 +208,13 @@ pipeline {
             cleanWs()
             
             // Clean up Docker resources
-            withCredentials([usernamePassword(
-              credentialsId: 'docker-hub-credentials',
-              usernameVariable: 'DOCKER_USER',
-              passwordVariable: 'DOCKER_PASS'
-            )]) {
-              bat 'docker system prune -f --volumes'
+            try {
+              bat 'docker system prune -f --volumes || echo "Docker cleanup failed, but continuing..."'
+            } catch (Exception e) {
+              echo 'Warning: Docker cleanup failed: ' + e.message
             }
           } catch (Exception e) {
-            echo 'Failed to clean up Docker resources: ' + e.toString()
+            echo 'Error in always post action: ' + e.toString()
           }
         }
       }
@@ -255,16 +253,10 @@ pipeline {
         script {
           try {
             // Clean up Docker resources
-            withCredentials([usernamePassword(
-              credentialsId: 'docker-hub-credentials',
-              usernameVariable: 'DOCKER_USER',
-              passwordVariable: 'DOCKER_PASS'
-            )]) {
-              bat 'docker-compose down --remove-orphans || echo "No containers to stop"'
-              bat 'docker system prune -f --volumes || echo "No Docker resources to clean"'
-            }
+            bat 'docker-compose down --remove-orphans || echo "No containers to stop"'
+            bat 'docker system prune -f --volumes || echo "No Docker resources to clean"'
           } catch (Exception e) {
-            echo 'Error during cleanup: ' + e.toString()
+            echo 'Warning: Error during Docker cleanup: ' + e.message
           }
         }
       }
