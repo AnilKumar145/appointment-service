@@ -52,6 +52,7 @@ pipeline {
           if (!pythonFound) {
             // Try known Python locations
             def pythonPaths = [
+              'C:\\Users\\DELL\\AppData\\Local\\Programs\\Python\\Python311\\python.exe',
               'C:\\Python39\\python.exe',
               'C:\\Python310\\python.exe',
               'C:\\Python311\\python.exe',
