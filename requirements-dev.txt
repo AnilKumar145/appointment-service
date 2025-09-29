@@ -1,0 +1,27 @@
+# Testing
+pytest==7.4.3
+pytest-cov==4.1.0
+pytest-asyncio==0.21.1
+pytest-httpx==0.24.0  # Latest version that supports pytest 7.x
+httpx==0.24.0  # Matching version with pytest-httpx
+schemathesis==3.19.0  # Version compatible with pytest 7.x
+locust==2.31.3
+
+# Code Quality
+flake8==6.1.0
+black==24.4.2
+isort==5.12.0
+mypy==1.5.1
+
+# Security
+bandit==1.7.5
+safety==2.3.5
+
+# Documentation
+mkdocs==1.5.2
+mkdocs-material==9.1.21
+
+# Development
+ipython==8.14.0
+python-dotenv==1.0.0
+alembic==1.12.0

@@ -10,11 +10,16 @@ pipeline {
     }
 
     stage('Stop old containers') {
-      steps {
-        // Stop any previously running containers
-        bat 'docker compose down || docker-compose down'
-      }
+        steps {
+            script {
+            // Force remove any running containers
+            bat 'docker-compose down --remove-orphans || echo "No containers to stop"'
+            
+            // Kill any process using port 5433
+            bat 'for /f "tokens=5" %a in (''netstat -ano ^| findstr :5433'') do taskkill /F /PID %a || echo "No process found on port 5433"'
+        }
     }
+}
 
     stage('Build & Start containers') {
       steps {

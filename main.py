@@ -1,3 +1,4 @@
+import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.endpoints import appointments
@@ -37,7 +38,7 @@ async def on_startup():
         print(f"❌ Database connection error: {str(e)}")
         print("⚠️ Starting without database connection - some features may not work")
     except Exception as e:
-        print(f"❌ Error during startup: {str(e)}")
+        print(f"❌ Critical error during startup: {str(e)}")
         sys.exit(1)
 
 
@@ -64,8 +65,8 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
         "main:app", 
-        host="127.0.0.1", 
-        port=8004, 
+        host="0.0.0.0",  # Changed to 0.0.0.0 for Docker compatibility
+        port=8007,       # Updated to match Docker and docker-compose
         reload=True,
         log_level="info"
     )
