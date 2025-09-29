@@ -1,5 +1,10 @@
 pipeline {
   agent any
+  
+  tools {
+    // This requires the Jenkins Chocolatey plugin to be installed
+    chocolatey 'choco'
+  }
 
   environment {
     DOCKER_IMAGE = 'appointment-service'
@@ -28,65 +33,52 @@ pipeline {
       }
     }
 
+    stage('Install Python') {
+      steps {
+        script {
+          echo 'Installing Python using Chocolatey...'
+          
+          // Install Python 3.11 using Chocolatey
+          bat '''
+            @echo off
+            choco --version || (
+              echo Installing Chocolatey...
+              Set-ExecutionPolicy Bypass -Scope Process -Force
+              [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+              iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+              refreshenv
+            )
+            
+            echo Installing Python 3.11...
+            choco install python311 -y --no-progress --version=3.11.9
+            
+            echo Refreshing environment variables...
+            $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+            
+            echo Verifying Python installation...
+            python --version
+            python -c "import sys; print(sys.executable)"
+          '''
+          
+          // Set Python path variables
+          env.PYTHON = 'python'
+          env.PIP = 'python -m pip'
+        }
+      }
+    }
+    
     stage('Setup Python Environment') {
       steps {
         script {
           echo 'Setting up Python environment...'
           
-          // Try to find a working Python
-          def pythonExe = 'python'
-          def pythonFound = false
-          
-          // Check if system Python works
-          try {
-            def pythonVersion = bat(script: 'python --version', returnStdout: true).trim()
-            echo "Found Python version: ${pythonVersion}"
-            
-            // Verify Python can import modules
-            bat 'python -c "import sys; print(sys.executable)"'
-            pythonFound = true
-          } catch (Exception e) {
-            echo 'Python not found in PATH or not working properly'
-          }
-          
-          if (!pythonFound) {
-            // Try known Python locations
-            def pythonPaths = [
-              'C:\\Python39\\python.exe',
-              'C:\\Python310\\python.exe',
-              'C:\\Python311\\python.exe',
-              'C:\\Program Files\\Python39\\python.exe',
-              'C:\\Program Files\\Python310\\python.exe',
-              'C:\\Program Files\\Python311\\python.exe'
-            ]
-            
-            for (path in pythonPaths) {
-              try {
-                echo "Trying Python at: ${path}"
-                def version = bat(script: "\"${path}\" --version", returnStdout: true).trim()
-                echo "Found Python version: ${version}"
-                bat "\"${path}\" -c \"import sys; print(sys.executable)\""
-                pythonExe = "\"${path}\""
-                pythonFound = true
-                echo "Using Python at: ${path}"
-                break
-              } catch (Exception e) {
-                echo "Python not found at ${path}"
-              }
-            }
-            
-            if (!pythonFound) {
-              error('No working Python installation found. Please install Python 3.8+ and ensure it\'s in the system PATH.')
-            }
-          }
-          
           // Create virtual environment
           try {
             bat """
-              ${pythonExe} -m venv ${VENV_PATH}
-              ${PIP} install --upgrade pip setuptools wheel
-              ${PIP} install -r requirements.txt
-              ${PIP} install -r requirements-dev.txt
+              python -m venv ${VENV_PATH}
+              ${VENV_PATH}\\Scripts\\pip install --upgrade pip setuptools wheel
+              ${VENV_PATH}\\Scripts\\pip install -r requirements.txt
+              ${VENV_PATH}\\Scripts\\pip install -r requirements-dev.txt
             """
           } catch (Exception e) {
             error("Failed to set up Python environment: ${e.message}")
@@ -94,7 +86,7 @@ pipeline {
           
           // Verify the virtual environment works
           try {
-            bat "${PYTHON} -c \"import sys; print('Python version:', sys.version)\""
+            bat "${VENV_PATH}\\Scripts\\python -c \"import sys; print('Python version:', sys.version)\""
           } catch (Exception e) {
             error('Virtual environment setup failed. Please check the logs.')
           }
