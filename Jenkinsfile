@@ -238,7 +238,7 @@ pipeline {
             // Notify failure (e.g., Slack, email)
             echo '❌ Pipeline failed!'
             
-            // Archive artifacts for debugging
+            // Archive artifacts for debugging if they exist
             archiveArtifacts artifacts: '**/test-results/**/*.xml', allowEmptyArchive: true
             archiveArtifacts artifacts: '**/coverage.xml', allowEmptyArchive: true
           } catch (Exception e) {
@@ -252,8 +252,14 @@ pipeline {
       node('built-in') {
         script {
           try {
-            // Clean up Docker resources
-            bat 'docker-compose down --remove-orphans || echo "No containers to stop"'
+            // Only try to run docker-compose if the file exists
+            if (fileExists('docker-compose.yml')) {
+              bat 'docker-compose down --remove-orphans || echo "No containers to stop"'
+            } else {
+              echo 'No docker-compose.yml found, skipping container cleanup'
+            }
+            
+            // Clean up any dangling Docker resources
             bat 'docker system prune -f --volumes || echo "No Docker resources to clean"'
           } catch (Exception e) {
             echo 'Warning: Error during Docker cleanup: ' + e.message
