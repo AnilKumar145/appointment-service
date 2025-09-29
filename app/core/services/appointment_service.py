@@ -1,32 +1,26 @@
 import logging
-import re
-from typing import List, Tuple, Optional
-from sqlmodel import Session, select, func
-from datetime import datetime, date, time
 import random
-from sqlalchemy.exc import IntegrityError
+import re
+from datetime import date, datetime, time
+from typing import List, Optional, Tuple
 
+from sqlalchemy.exc import IntegrityError
+from sqlmodel import Session, func, select
+
+from app.api.v1.schemas.appointment import (AppointmentCreate,
+                                            AppointmentResponse,
+                                            AppointmentStatusUpdate,
+                                            AppointmentUpdate, CountResponse)
+from app.core.exceptions.custom_exceptions import (AppointmentConflictError,
+                                                   AppointmentNotFoundError,
+                                                   BusinessRuleViolationError,
+                                                   ValidationError)
+from app.core.utils.helpers import (generate_appointment_id,
+                                    validate_appointment_conflict,
+                                    validate_business_hours,
+                                    validate_minimum_duration)
 from app.data.models.appointment import Appointment, AppointmentStatus
 from app.data.repositories.appointment_repository import AppointmentRepository
-from app.api.v1.schemas.appointment import (
-    AppointmentCreate,
-    AppointmentUpdate,
-    AppointmentResponse,
-    AppointmentStatusUpdate,
-    CountResponse,
-)
-from app.core.exceptions.custom_exceptions import (
-    AppointmentNotFoundError,
-    AppointmentConflictError,
-    ValidationError,
-    BusinessRuleViolationError,
-)
-from app.core.utils.helpers import (
-    generate_appointment_id,
-    validate_appointment_conflict,
-    validate_business_hours,
-    validate_minimum_duration,
-)
 
 
 class AppointmentService:

@@ -1,22 +1,19 @@
 """Unit tests for AppointmentService business logic."""
 
-from datetime import date, time, datetime
-import pytest
-from sqlmodel import select, Session
+from datetime import date, datetime, time
 
+import pytest
+from sqlmodel import Session, select
+
+from app.api.v1.schemas.appointment import (AppointmentCreate,
+                                            AppointmentStatusUpdate,
+                                            AppointmentUpdate)
+from app.core.exceptions.custom_exceptions import (AppointmentConflictError,
+                                                   AppointmentNotFoundError,
+                                                   BusinessRuleViolationError,
+                                                   ValidationError)
 from app.core.services.appointment_service import AppointmentService
-from app.core.exceptions.custom_exceptions import (
-    AppointmentNotFoundError,
-    AppointmentConflictError,
-    ValidationError,
-    BusinessRuleViolationError,
-)
-from app.api.v1.schemas.appointment import (
-    AppointmentCreate,
-    AppointmentUpdate,
-    AppointmentStatusUpdate,
-)
-from app.data.models.appointment import AppointmentStatus, Appointment
+from app.data.models.appointment import Appointment, AppointmentStatus
 
 
 @pytest.fixture()

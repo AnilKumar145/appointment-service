@@ -1,7 +1,8 @@
-from datetime import datetime, date, time
-from typing import Optional
-from sqlmodel import text
 import base64
+from datetime import date, datetime, time
+from typing import Optional
+
+from sqlmodel import text
 
 
 def generate_appointment_id(session) -> str:

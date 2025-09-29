@@ -2,8 +2,8 @@
 
 from datetime import date, time
 
-from app.data.repositories.appointment_repository import AppointmentRepository
 from app.data.models.appointment import Appointment, AppointmentStatus
+from app.data.repositories.appointment_repository import AppointmentRepository
 
 
 def test_repository_crud_cycle(db_session):

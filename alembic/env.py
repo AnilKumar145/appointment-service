@@ -1,18 +1,20 @@
-from logging.config import fileConfig
-from sqlalchemy import engine_from_config, pool
-from alembic import context
 import os
 import sys
+from logging.config import fileConfig
+
+from sqlalchemy import engine_from_config, pool
+
+from alembic import context
 
 # Add the project root to Python path
 sys.path.append(os.getcwd())
 
+# Load environment variables
+from dotenv import load_dotenv
+
 # Import your models
 from app.data.models.appointment import Appointment, AppointmentStatus
 from app.data.models.base import SQLModel
-
-# Load environment variables
-from dotenv import load_dotenv
 
 load_dotenv()
 

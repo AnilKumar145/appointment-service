@@ -1,7 +1,8 @@
 """Security hardening tests: malformed content, oversized payloads, invalid enums, and path injection attempts."""
 
-import os
 import json
+import os
+
 import pytest
 
 

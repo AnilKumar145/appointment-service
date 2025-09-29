@@ -3,8 +3,9 @@
 Focus on `generate_appointment_id` format requirement: APT-{YEAR}-{XXXX} (4 digits)
 """
 
-from datetime import datetime
 import re
+from datetime import datetime
+
 import pytest
 
 from app.core.utils.helpers import generate_appointment_id

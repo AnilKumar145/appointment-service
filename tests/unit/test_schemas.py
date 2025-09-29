@@ -3,14 +3,13 @@
 Covers field validators: future date, end after start, non-empty names.
 """
 
-from datetime import date, time, timedelta, datetime
+from datetime import date, datetime, time, timedelta
+
 import pytest
 
-from app.api.v1.schemas.appointment import (
-    AppointmentCreate,
-    AppointmentUpdate,
-    AppointmentStatusUpdate,
-)
+from app.api.v1.schemas.appointment import (AppointmentCreate,
+                                            AppointmentStatusUpdate,
+                                            AppointmentUpdate)
 from app.data.models.appointment import AppointmentStatus
 
 

@@ -4,9 +4,9 @@ from datetime import date, time
 
 from sqlmodel import Session
 
+from app.data.models.appointment import Appointment
 from app.data.models.base import create_db_and_tables
 from app.data.repositories.appointment_repository import AppointmentRepository
-from app.data.models.appointment import Appointment
 
 
 def test_db_create_and_query(db_session: Session):

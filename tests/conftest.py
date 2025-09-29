@@ -7,24 +7,23 @@ Shared pytest fixtures for the appointment-service test suite.
 - Provides helper factory to build valid Appointment payloads
 """
 
-import os
 import asyncio
-from datetime import date, time, timedelta, datetime
+import itertools
+import os
+from datetime import date, datetime, time, timedelta
 from typing import Dict
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import SQLModel, Session, create_engine, text
-from alembic.config import Config as AlembicConfig
-from alembic import command as alembic_command
 from sqlalchemy import inspect
 from sqlalchemy.pool import StaticPool
-import itertools
+from sqlmodel import Session, SQLModel, create_engine, text
 
-from main import app as fastapi_app
-from app.data.models.base import get_session as prod_get_session
+from alembic import command as alembic_command
+from alembic.config import Config as AlembicConfig
 from app.data.models.appointment import Appointment, AppointmentStatus
-
+from app.data.models.base import get_session as prod_get_session
+from main import app as fastapi_app
 
 # Global counters to ensure uniqueness across the entire test session
 _apt_counter = itertools.count(1)
@@ -112,11 +111,12 @@ def _monkeypatch_helpers(monkeypatch):
     - generate_appointment_id: ensure uniqueness to avoid UNIQUE constraint failures
     - validate_appointment_conflict: use ORM-based overlap check to avoid raw SQL .exec() signature issues
     """
-    from app.core import utils as utils_pkg
-    from app.core.utils import helpers as helpers_mod
-    from app.core.services import appointment_service as service_mod
-    from app.data.models.appointment import Appointment
     from sqlmodel import select
+
+    from app.core import utils as utils_pkg
+    from app.core.services import appointment_service as service_mod
+    from app.core.utils import helpers as helpers_mod
+    from app.data.models.appointment import Appointment
 
     def _gen_id(session):
         year = datetime.now().year

@@ -1,14 +1,11 @@
-from pydantic import BaseModel, Field, field_validator, ConfigDict
-from typing import Optional, List
-from datetime import datetime, date, time
-from app.data.models.appointment import AppointmentStatus
 import re
-from pydantic import BaseModel, Field, validator
-from datetime import date, time
-from typing import Optional, List
-import re
+from datetime import date, datetime, time
 from enum import Enum
-from pydantic import ConfigDict
+from typing import List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, validator
+
+from app.data.models.appointment import AppointmentStatus
 
 
 class AppointmentBase(BaseModel):

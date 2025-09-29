@@ -1,7 +1,9 @@
+from datetime import date, datetime
 from typing import List, Optional, Tuple
+
 from sqlmodel import Session, select
+
 from app.data.models.appointment import Appointment, AppointmentStatus
-from datetime import datetime, date
 
 
 class AppointmentRepository:

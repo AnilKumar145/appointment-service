@@ -34,10 +34,11 @@
 #         raise
 
 
-from sqlmodel import SQLModel, Session, create_engine
-from sqlalchemy.exc import SQLAlchemyError
 import os
+
 from dotenv import load_dotenv
+from sqlalchemy.exc import SQLAlchemyError
+from sqlmodel import Session, SQLModel, create_engine
 
 load_dotenv()
 

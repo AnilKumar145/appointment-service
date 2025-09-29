@@ -4,12 +4,12 @@ These are lightweight stress scenarios and can be scaled by increasing USERS/ROU
 """
 
 import asyncio
-from datetime import date, datetime, timedelta, time
-import uuid
 import os
+import uuid
+from datetime import date, datetime, time, timedelta
 
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 USERS = int(os.getenv("PERF_USERS", "200"))
 ROUNDS = int(os.getenv("PERF_ROUNDS", "3"))

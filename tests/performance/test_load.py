@@ -5,13 +5,12 @@ without external tooling. Scale the `USERS` value to increase load.
 """
 
 import asyncio
-from datetime import date, time, datetime
-import uuid
-
 import os
-import pytest
-from httpx import AsyncClient, ASGITransport
+import uuid
+from datetime import date, datetime, time
 
+import pytest
+from httpx import ASGITransport, AsyncClient
 
 USERS = int(os.getenv("PERF_USERS", "200"))  # Adjust up (e.g., 1000, 5000) via env var
 

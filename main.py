@@ -1,8 +1,10 @@
 import sys
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.v1.endpoints import appointments
 from sqlalchemy.exc import SQLAlchemyError
+
+from app.api.v1.endpoints import appointments
 
 # Create FastAPI application
 app = FastAPI(

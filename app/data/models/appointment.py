@@ -1,10 +1,11 @@
-from sqlmodel import SQLModel, Field, Column
-from sqlalchemy import Enum as SQLAlchemyEnum
-from typing import Optional
-from datetime import datetime, date, time
-from enum import Enum
-from pydantic import ConfigDict
 import json
+from datetime import date, datetime, time
+from enum import Enum
+from typing import Optional
+
+from pydantic import ConfigDict
+from sqlalchemy import Enum as SQLAlchemyEnum
+from sqlmodel import Column, Field, SQLModel
 
 
 class AppointmentStatus(str, Enum):
