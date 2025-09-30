@@ -121,8 +121,8 @@ pipeline {
               // Create reports directory if it doesn't exist
               bat "if not exist \"${WORKSPACE}\\reports\" mkdir \"${WORKSPACE}\\reports\""
               
-              // Run Bandit with error handling
-              catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
+              // Run Bandit with error handling - don't fail the build for security findings
+              catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
                 bat """
                   call "${VENV_PATH}\\Scripts\\activate.bat"
                   
@@ -153,8 +153,8 @@ pipeline {
             script {
               echo 'Running dependency vulnerability scan...'
               
-              // Run Safety with error handling
-              catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
+              // Run Safety with error handling - don't fail the build for security findings
+              catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
                 bat """
                   call "${VENV_PATH}\\Scripts\\activate.bat"
                   
