@@ -4,15 +4,20 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 
-from app.api.v1.schemas.appointment import (AppointmentCreate,
-                                            AppointmentListResponse,
-                                            AppointmentResponse,
-                                            AppointmentStatusUpdate,
-                                            AppointmentUpdate, CountResponse)
-from app.core.exceptions.custom_exceptions import (AppointmentConflictError,
-                                                   AppointmentNotFoundError,
-                                                   BusinessRuleViolationError,
-                                                   ValidationError)
+from app.api.v1.schemas.appointment import (
+    AppointmentCreate,
+    AppointmentListResponse,
+    AppointmentResponse,
+    AppointmentStatusUpdate,
+    AppointmentUpdate,
+    CountResponse,
+)
+from app.core.exceptions.custom_exceptions import (
+    AppointmentConflictError,
+    AppointmentNotFoundError,
+    BusinessRuleViolationError,
+    ValidationError,
+)
 from app.core.services.appointment_service import AppointmentService
 from app.data.models.appointment import AppointmentStatus
 from app.data.models.base import get_session

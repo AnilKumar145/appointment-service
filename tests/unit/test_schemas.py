@@ -7,9 +7,11 @@ from datetime import date, datetime, time, timedelta
 
 import pytest
 
-from app.api.v1.schemas.appointment import (AppointmentCreate,
-                                            AppointmentStatusUpdate,
-                                            AppointmentUpdate)
+from app.api.v1.schemas.appointment import (
+    AppointmentCreate,
+    AppointmentStatusUpdate,
+    AppointmentUpdate,
+)
 from app.data.models.appointment import AppointmentStatus
 
 
