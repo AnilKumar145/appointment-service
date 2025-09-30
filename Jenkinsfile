@@ -38,28 +38,11 @@ pipeline {
         script {
           echo 'Setting up Python environment...'
           
-          // Use the system Python by default
-          def pythonExe = 'python'
-          
-          // Verify Python is available and get its version
-          try {
-            def pythonVersion = bat(script: 'python --version', returnStdout: true).trim()
-            echo "Using Python: ${pythonVersion}"
-            
-            // Get Python executable path
-            def pythonPath = bat(script: 'python -c "import sys; print(sys.executable)"', returnStdout: true).trim()
-            pythonExe = "\"${pythonPath}\""
-            echo "Python executable: ${pythonPath}"
-            
-          } catch (Exception e) {
-            error('Python not found or not working properly. Please ensure Python 3.8+ is installed and in PATH.')
-          }
-          
-          // Create and activate virtual environment
+          // Create and activate virtual environment using system Python directly
           try {
             // Create virtual environment
             bat """
-              ${pythonExe} -m venv "${VENV_PATH}"
+              python -m venv "${VENV_PATH}"
               call "${VENV_PATH}\\Scripts\\activate.bat"
               
               echo [INFO] Upgrading pip, setuptools and wheel...
