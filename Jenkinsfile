@@ -136,15 +136,16 @@ pipeline {
         stage('Bandit Security Scan') {
           steps {
             script {
-              bat "${PIP} install --force-reinstall bandit"
-              bat "${PYTHON} -m bandit -r . -c pyproject.toml"
+              bat "${PIP} install --upgrade bandit"
+              bat "${PYTHON} -m bandit -r . -ll"
             }
           }
         }
         stage('Dependency Check') {
           steps {
             script {
-              bat "${PYTHON} -m safety check --full-report"
+              bat "${PIP} install --upgrade safety"
+              bat "${PYTHON} -m safety scan --full-report"
             }
           }
         }
