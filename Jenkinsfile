@@ -71,6 +71,20 @@ pipeline {
       }
     }
 
+    stage('Verify Dependencies') {
+      steps {
+        script {
+          echo 'Verifying test dependencies...'
+          bat """
+            call "${VENV_PATH}\\Scripts\\activate.bat"
+            python -c "import pytest_cov; print('✅ pytest-cov available')"
+            python -c "import coverage; print('✅ coverage available')"
+            python -c "import pytest; print(f'✅ pytest {pytest.__version__} available')"
+          """
+        }
+      }
+    }
+
     stage('Code Quality & Linting') {
       parallel {
         stage('Run Flake8') {
@@ -144,17 +158,8 @@ pipeline {
                 bat """
                   call "${VENV_PATH}\\Scripts\\activate.bat"
                   
-                  echo [INFO] Installing/updating safety...
-                  pip install --upgrade safety
-                  
-                  echo [INFO] Ensuring reports directory exists...
-                  if not exist "${WORKSPACE}\\reports" mkdir "${WORKSPACE}\\reports"
-                  
-                  echo [INFO] Running dependency scan (non-interactive)...
-                  set SAFETY_DISABLE_TELEMETRY=1
-                  safety scan -r requirements.txt --json --keyless > "${WORKSPACE}\\reports\\safety-report.json" || echo Safety scan completed with findings (non-blocking)
-                  
-                  type "${WORKSPACE}\\reports\\safety-report.json"
+                  echo [INFO] Running dependency scan...
+                  safety check --json --output "${WORKSPACE}\\reports\\safety-report.json" || echo "Safety scan completed with findings"
                 """
               }
             }
@@ -172,14 +177,19 @@ pipeline {
     stage('Unit Tests') {
       steps {
         script {
+          // Create test-results directory first
+          bat "if not exist \"${WORKSPACE}\\test-results\" mkdir \"${WORKSPACE}\\test-results\""
+          
           bat """
-            set PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 && ${PYTHON} -m pytest tests/unit --cov=app --cov-report=xml:coverage.xml --cov-report=term -v --junitxml=test-results/unit-tests.xml
+            ${PYTHON} -m pytest tests/unit --cov=app --cov-report=xml:coverage.xml --cov-report=term -v --junitxml=test-results/unit-tests.xml
           """
         }
       }
       post {
         always {
           junit 'test-results/unit-tests.xml'
+          // Archive coverage report
+          archiveArtifacts artifacts: 'coverage.xml', allowEmptyArchive: true
         }
       }
     }
@@ -187,9 +197,10 @@ pipeline {
     stage('Integration Tests') {
       steps {
         script {
+          bat "if not exist \"${WORKSPACE}\\test-results\" mkdir \"${WORKSPACE}\\test-results\""
           bat 'docker-compose -f docker-compose.test.yml up -d --build'
           bat """
-            set PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 && ${PYTHON} -m pytest tests/integration -v --junitxml=test-results/integration-tests.xml
+            ${PYTHON} -m pytest tests/integration -v --junitxml=test-results/integration-tests.xml
           """
         }
       }
@@ -289,24 +300,12 @@ pipeline {
     
     cleanup {
       script {
-        echo 'Cleaning up workspace...'
-        
-        // Stop any running Docker containers
+        echo 'Cleaning up Docker resources...'
         try {
-          if (fileExists('docker-compose.yml')) {
-            bat 'docker-compose down --remove-orphans --volumes --rmi local || echo No Docker Compose services to stop'
-          }
-          
-          // Clean up Docker resources
-          bat 'docker system prune -f --volumes || echo No Docker resources to clean'
-          
-          // Remove any remaining containers, networks, and volumes
-          bat '@FOR /f "tokens=*" %%i IN (\'docker ps -aq\') DO @docker rm -f %%i || echo No containers to remove'
-          bat '@FOR /f "tokens=*" %%i IN (\'docker network ls -q\') DO @docker network rm %%i || echo No networks to remove'
-          bat '@FOR /f "tokens=*" %%i IN (\'docker volume ls -q\') DO @docker volume rm %%i || echo No volumes to remove'
-          
+          bat 'docker-compose down --remove-orphans || echo No Docker Compose running'
+          bat 'docker system prune -f || echo Docker prune completed'
         } catch (Exception e) {
-          echo 'Warning: Error during cleanup: ' + e.message
+          echo 'Cleanup warning: ' + e.message
         }
       }
     }
