@@ -306,14 +306,14 @@ pipeline {
         
         // Try to get more detailed error information
         try {
-          if (fileExists('${WORKSPACE}\reports\bandit-report.json')) {
+          if (fileExists("${WORKSPACE}\\reports\\bandit-report.json")) {
             echo 'Bandit report summary:'
-            bat 'type "${WORKSPACE}\reports\bandit-report.json" | findstr /i "issue" || echo No issues found'
+            bat "type \"${WORKSPACE}\\reports\\bandit-report.json\" | findstr /i \"issue\" || echo No issues found"
           }
           
-          if (fileExists('${WORKSPACE}\reports\safety-report.json')) {
+          if (fileExists("${WORKSPACE}\\reports\\safety-report.json")) {
             echo 'Safety report summary:'
-            bat 'type "${WORKSPACE}\reports\safety-report.json" | findstr /i "vulnerability" || echo No vulnerabilities found'
+            bat "type \"${WORKSPACE}\\reports\\safety-report.json\" | findstr /i \"vulnerability\" || echo No vulnerabilities found"
           }
         } catch (Exception e) {
           echo 'Error while generating failure report: ' + e.toString()
