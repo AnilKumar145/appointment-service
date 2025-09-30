@@ -135,15 +135,19 @@ pipeline {
     stage('Security Scanning') {
       parallel {
         stage('Bandit Security Scan') {
+          environment {
+            PYTHONIOENCODING = 'utf-8'  // Set UTF-8 encoding for Bandit output
+          }
           steps {
             script {
               catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
                 bat """
                   ${PIP} uninstall -y bandit || echo 'Bandit not installed'
                   ${PYTHON} -m pip install --upgrade pip
-                  ${PIP} install bandit --no-cache-dir
-                  ${PYTHON} -m bandit -r . -ll -c .bandit || echo 'Bandit scan completed with findings (non-blocking)'
+                  ${PIP} install --upgrade bandit hypothesis --no-cache-dir
+                  ${PYTHON} -m bandit -r . -f json -o bandit-report.json -ll -c .bandit || echo 'Bandit scan completed with findings (non-blocking)'
                 """
+                bat 'type bandit-report.json' // Display bandit JSON report content in logs
               }
             }
           }
