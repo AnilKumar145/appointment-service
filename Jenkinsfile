@@ -122,7 +122,7 @@ pipeline {
               echo 'Running Bandit security scan...'
               
               // Create reports directory if it doesn't exist
-              bat "if not exist "${WORKSPACE}\\reports" mkdir "${WORKSPACE}\\reports""
+              bat "if not exist \"${WORKSPACE}\\reports\" mkdir \"${WORKSPACE}\\reports\""
               
               // Run Bandit with error handling
               catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
@@ -199,13 +199,7 @@ pipeline {
       steps {
         script {
           bat """
-            set PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 && \
-            ${PYTHON} -m pytest tests/unit \
-              --cov=app \
-              --cov-report=xml:coverage.xml \
-              --cov-report=term \
-              -v \
-              --junitxml=test-results/unit-tests.xml
+            set PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 && ${PYTHON} -m pytest tests/unit --cov=app --cov-report=xml:coverage.xml --cov-report=term -v --junitxml=test-results/unit-tests.xml
           """
         }
       }
@@ -229,10 +223,7 @@ pipeline {
         script {
           bat 'docker-compose -f docker-compose.test.yml up -d --build'
           bat """
-            set PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 && \
-            ${PYTHON} -m pytest tests/integration \
-              -v \
-              --junitxml=test-results/integration-tests.xml
+            set PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 && ${PYTHON} -m pytest tests/integration -v --junitxml=test-results/integration-tests.xml
           """
         }
       }
