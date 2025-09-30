@@ -85,7 +85,7 @@ pipeline {
           try {
             bat """
               ${pythonExe} -m venv ${VENV_PATH}
-              ${PIP} install --upgrade pip
+              ${PYTHON} -m pip install --upgrade pip
               ${PIP} install --upgrade setuptools wheel
               ${PIP} install -r requirements.txt
               ${PIP} install -r requirements-dev.txt
@@ -140,9 +140,9 @@ pipeline {
               catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
                 bat """
                   ${PIP} uninstall -y bandit || echo 'Bandit not installed'
-                  ${PIP} install --upgrade pip
+                  ${PYTHON} -m pip install --upgrade pip
                   ${PIP} install bandit --no-cache-dir
-                  ${PYTHON} -m bandit -r . -ll || echo 'Bandit scan completed with findings (non-blocking)'
+                  ${PYTHON} -m bandit -r . -ll -c .bandit || echo 'Bandit scan completed with findings (non-blocking)'
                 """
               }
             }
@@ -151,7 +151,11 @@ pipeline {
         stage('Dependency Check') {
           steps {
             script {
-              bat "echo 'Safety scan skipped in CI environment'"
+              catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+                bat """
+                  ${PYTHON} -m safety check -r requirements.txt --full-report || echo 'Safety scan completed with findings (non-blocking)'
+                """
+              }
             }
           }
         }
