@@ -159,7 +159,7 @@ pipeline {
                   call "${VENV_PATH}\\Scripts\\activate.bat"
                   
                   echo [INFO] Running dependency scan...
-                  safety check --json --output "${WORKSPACE}\\reports\\safety-report.json" || echo "Safety scan completed with findings"
+                  safety check --output json > "${WORKSPACE}\\reports\\safety-report.json" || echo "Safety scan completed with findings"
                 """
               }
             }
