@@ -130,16 +130,6 @@ pipeline {
             always {
               // Archive the Bandit report
               archiveArtifacts artifacts: 'reports/bandit-report.json', allowEmptyArchive: true
-              
-              // Publish HTML report if generated
-              publishHTML(target: [
-                allowMissing: true,
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                reportDir: 'reports',
-                reportFiles: 'bandit-report.json',
-                reportName: 'Bandit Security Report'
-              ])
             }
           }
         }
@@ -160,8 +150,9 @@ pipeline {
                   echo [INFO] Ensuring reports directory exists...
                   if not exist "${WORKSPACE}\\reports" mkdir "${WORKSPACE}\\reports"
                   
-                  echo [INFO] Running dependency scan...
-                  safety scan -r requirements.txt --json > "${WORKSPACE}\\reports\\safety-report.json" || echo Safety scan completed with findings (non-blocking)
+                  echo [INFO] Running dependency scan (non-interactive)...
+                  set SAFETY_DISABLE_TELEMETRY=1
+                  safety scan -r requirements.txt --json --keyless > "${WORKSPACE}\\reports\\safety-report.json" || echo Safety scan completed with findings (non-blocking)
                   
                   type "${WORKSPACE}\\reports\\safety-report.json"
                 """
@@ -189,14 +180,6 @@ pipeline {
       post {
         always {
           junit 'test-results/unit-tests.xml'
-          publishHTML(target: [
-            allowMissing: false,
-            alwaysLinkToLastBuild: false,
-            keepAll: true,
-            reportDir: 'htmlcov',
-            reportFiles: 'index.html',
-            reportName: 'Coverage Report'
-          ])
         }
       }
     }
@@ -318,9 +301,9 @@ pipeline {
           bat 'docker system prune -f --volumes || echo No Docker resources to clean'
           
           // Remove any remaining containers, networks, and volumes
-          bat '@FOR /f "tokens=*" %i IN (\'docker ps -aq\') DO @docker rm -f %i || echo No containers to remove'
-          bat '@FOR /f "tokens=*" %i IN (\'docker network ls -q\') DO @docker network rm %i || echo No networks to remove'
-          bat '@FOR /f "tokens=*" %i IN (\'docker volume ls -q\') DO @docker volume rm %i || echo No volumes to remove'
+          bat '@FOR /f "tokens=*" %%i IN (\'docker ps -aq\') DO @docker rm -f %%i || echo No containers to remove'
+          bat '@FOR /f "tokens=*" %%i IN (\'docker network ls -q\') DO @docker network rm %%i || echo No networks to remove'
+          bat '@FOR /f "tokens=*" %%i IN (\'docker volume ls -q\') DO @docker volume rm %%i || echo No volumes to remove'
           
         } catch (Exception e) {
           echo 'Warning: Error during cleanup: ' + e.message
