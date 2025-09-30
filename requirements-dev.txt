@@ -5,6 +5,7 @@ pytest-asyncio==0.21.1
 pytest-httpx==0.24.0  # Latest version that supports pytest 7.x
 httpx==0.24.0  # Matching version with pytest-httpx
 schemathesis==3.19.0  # Version compatible with pytest 7.x
+hypothesis==6.92.1  # Pin to a known compatible version
 locust==2.15.1  # Downgraded to a version that works with requests<2.29.0
 
 # Code Quality

@@ -4,16 +4,21 @@ pipeline {
   environment {
     DOCKER_IMAGE = 'appointment-service'
     DOCKER_TAG = "${env.BUILD_NUMBER}"
-    VENV_PATH = "${WORKSPACE}/venv"
-    PYTHON = "${VENV_PATH}/Scripts/python"
-    PIP = "${VENV_PATH}/Scripts/pip"
+    VENV_PATH = "${WORKSPACE}\\venv"
+    PYTHON = "${VENV_PATH}\\Scripts\\python"
+    PIP = "${VENV_PATH}\\Scripts\\pip"
     ENV_FILE = '.env.test'
+    // Set UTF-8 encoding for all Python processes
+    PYTHONIOENCODING = 'utf-8'
+    PYTHONUNBUFFERED = '1'
   }
 
   options {
     buildDiscarder(logRotator(numToKeepStr: '10'))
     timeout(time: 30, unit: 'MINUTES')
     timestamps()
+    // Allow the build to continue even if a stage fails
+    skipStagesAfterUnstable()
   }
 
   stages {
@@ -33,75 +38,52 @@ pipeline {
         script {
           echo 'Setting up Python environment...'
           
-          // Try to find a working Python
+          // Use the system Python by default
           def pythonExe = 'python'
-          def pythonFound = false
           
-          // Check if system Python works
+          // Verify Python is available and get its version
           try {
             def pythonVersion = bat(script: 'python --version', returnStdout: true).trim()
-            echo "Found Python version: ${pythonVersion}"
+            echo "Using Python: ${pythonVersion}"
             
-            // Verify Python can import modules
-            bat 'python -c "import sys; print(sys.executable)"'
-            pythonFound = true
+            // Get Python executable path
+            def pythonPath = bat(script: 'python -c "import sys; print(sys.executable)"', returnStdout: true).trim()
+            pythonExe = "\"${pythonPath}\""
+            echo "Python executable: ${pythonPath}"
+            
           } catch (Exception e) {
-            echo 'Python not found in PATH or not working properly'
+            error('Python not found or not working properly. Please ensure Python 3.8+ is installed and in PATH.')
           }
           
-          if (!pythonFound) {
-            // Try known Python locations
-            def pythonPaths = [
-              'C:\\Users\\DELL\\AppData\\Local\\Programs\\Python\\Python311\\python.exe',
-              'C:\\Python39\\python.exe',
-              'C:\\Python310\\python.exe',
-              'C:\\Python311\\python.exe',
-              'C:\\Program Files\\Python39\\python.exe',
-              'C:\\Program Files\\Python310\\python.exe',
-              'C:\\Program Files\\Python311\\python.exe'
-            ]
-            
-            for (path in pythonPaths) {
-              try {
-                echo "Trying Python at: ${path}"
-                def version = bat(script: "\"${path}\" --version", returnStdout: true).trim()
-                echo "Found Python version: ${version}"
-                bat "\"${path}\" -c \"import sys; print(sys.executable)\""
-                pythonExe = "\"${path}\""
-                pythonFound = true
-                echo "Using Python at: ${path}"
-                break
-              } catch (Exception e) {
-                echo "Python not found at ${path}"
-              }
-            }
-            
-            if (!pythonFound) {
-              error('No working Python installation found. Please install Python 3.8+ and ensure it\'s in the system PATH.')
-            }
-          }
-          
-          // Create virtual environment
+          // Create and activate virtual environment
           try {
+            // Create virtual environment
             bat """
-              ${pythonExe} -m venv ${VENV_PATH}
-              ${PYTHON} -m pip install --upgrade pip
-              ${PIP} install --upgrade setuptools wheel
-              ${PIP} install -r requirements.txt
-              ${PIP} install -r requirements-dev.txt
+              ${pythonExe} -m venv "${VENV_PATH}"
+              call "${VENV_PATH}\\Scripts\\activate.bat"
+              
+              echo [INFO] Upgrading pip, setuptools and wheel...
+              python -m pip install --upgrade pip setuptools wheel
+              
+              echo [INFO] Installing project dependencies...
+              pip install -r requirements.txt
+              
+              echo [INFO] Installing development dependencies...
+              pip install -r requirements-dev.txt
+              
+              echo [INFO] Installed packages:
+              pip list
             """
+            
+            // Verify the virtual environment works
+            def pythonVersion = bat(script: "\"${PYTHON}\" --version", returnStdout: true).trim()
+            echo "Virtual environment Python version: ${pythonVersion}"
+            
           } catch (Exception e) {
             error("Failed to set up Python environment: ${e.message}")
           }
           
-          // Verify the virtual environment works
-          try {
-            bat "${PYTHON} -c \"import sys; print('Python version:', sys.version)\""
-          } catch (Exception e) {
-            error('Virtual environment setup failed. Please check the logs.')
-          }
-          
-          echo 'Python environment setup completed successfully.'
+          echo '✅ Python environment setup completed successfully.'
         }
       }
     }
@@ -135,31 +117,78 @@ pipeline {
     stage('Security Scanning') {
       parallel {
         stage('Bandit Security Scan') {
-          environment {
-            PYTHONIOENCODING = 'utf-8'  // Force UTF-8 encoding for Bandit output
-          }
           steps {
             script {
-              catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+              echo 'Running Bandit security scan...'
+              
+              // Create reports directory if it doesn't exist
+              bat "if not exist "${WORKSPACE}\\reports" mkdir "${WORKSPACE}\\reports""
+              
+              // Run Bandit with error handling
+              catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
                 bat """
-                  ${PIP} uninstall -y bandit || echo 'Bandit not installed'
-                  ${PYTHON} -m pip install --upgrade pip
-                  ${PIP} install --upgrade bandit hypothesis --no-cache-dir
-                  ${PYTHON} -m bandit -r . -f json -o bandit-report.json -ll -c .bandit || echo 'Bandit scan completed with findings (non-blocking)'
+                  call "${VENV_PATH}\\Scripts\\activate.bat"
+                  
+                  echo [INFO] Installing/updating bandit...
+                  pip install --upgrade bandit
+                  
+                  echo [INFO] Running Bandit scan...
+                  bandit -r . \
+                    -f json -o "${WORKSPACE}\\reports\\bandit-report.json" \
+                    -ll -c .bandit \
+                    || echo 'Bandit scan completed with findings (non-blocking)'
+                    
+                  type "${WORKSPACE}\\reports\\bandit-report.json"
                 """
-                bat 'type bandit-report.json'  // Show JSON report content in logs
               }
             }
           }
+          post {
+            always {
+              // Archive the Bandit report
+              archiveArtifacts artifacts: 'reports/bandit-report.json', allowEmptyArchive: true
+              
+              // Publish HTML report if generated
+              publishHTML(target: [
+                allowMissing: true,
+                alwaysLinkToLastBuild: true,
+                keepAll: true,
+                reportDir: 'reports',
+                reportFiles: 'bandit-report.json',
+                reportName: 'Bandit Security Report'
+              ])
+            }
+          }
         }
+        
         stage('Dependency Check') {
           steps {
             script {
-              catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+              echo 'Running dependency vulnerability scan...'
+              
+              // Run Safety with error handling
+              catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
                 bat """
-                  ${PYTHON} -m safety check -r requirements.txt --full-report || echo 'Safety scan completed with findings (non-blocking)'
+                  call "${VENV_PATH}\\Scripts\\activate.bat"
+                  
+                  echo [INFO] Installing/updating safety...
+                  pip install --upgrade safety
+                  
+                  echo [INFO] Ensuring reports directory exists...
+                  if not exist "${WORKSPACE}\\reports" mkdir "${WORKSPACE}\\reports"
+                  
+                  echo [INFO] Running dependency scan...
+                  safety scan -r requirements.txt --json > "${WORKSPACE}\\reports\\safety-report.json" || echo Safety scan completed with findings (non-blocking)
+                  
+                  type "${WORKSPACE}\\reports\\safety-report.json"
                 """
               }
+            }
+          }
+          post {
+            always {
+              // Archive the Safety report
+              archiveArtifacts artifacts: 'reports/safety-report.json', allowEmptyArchive: true
             }
           }
         }
@@ -170,6 +199,7 @@ pipeline {
       steps {
         script {
           bat """
+            set PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 && \
             ${PYTHON} -m pytest tests/unit \
               --cov=app \
               --cov-report=xml:coverage.xml \
@@ -199,6 +229,7 @@ pipeline {
         script {
           bat 'docker-compose -f docker-compose.test.yml up -d --build'
           bat """
+            set PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 && \
             ${PYTHON} -m pytest tests/integration \
               -v \
               --junitxml=test-results/integration-tests.xml
@@ -250,52 +281,75 @@ pipeline {
 
   post {
     always {
-      node('built-in') {
-        script {
-          try {
-            cleanWs()
-            bat 'docker system prune -f --volumes || echo "Docker cleanup failed, but continuing..."'
-          } catch (Exception e) {
-            echo 'Error in always post action: ' + e.toString()
-          }
-        }
+      script {
+        echo "Build completed with status: ${currentBuild.currentResult}"
+        
+        // Archive test results and reports
+        archiveArtifacts artifacts: '**/test-results/**/*, **/reports/**/*, **/*.xml, **/*.json, **/*.html', 
+                       allowEmptyArchive: true
+        
+        // Clean up workspace
+        cleanWs(cleanWhenAborted: true, cleanWhenFailure: true, cleanWhenNotBuilt: true, 
+               cleanWhenSuccess: true, cleanupMatrixParent: true, deleteDirs: true)
       }
     }
+    
     success {
-      node('built-in') {
-        script {
-          if (env.BRANCH_NAME == 'main') {
-            echo '✅ Pipeline succeeded!'
-          }
+      script {
+        if (env.BRANCH_NAME == 'main') {
+          echo '✅ Pipeline succeeded! Deployment completed.'
+        } else {
+          echo '✅ Pipeline succeeded!'
         }
       }
     }
+    
     failure {
-      node('built-in') {
-        script {
-          try {
-            echo '❌ Pipeline failed!'
-            archiveArtifacts artifacts: '**/test-results/**/*.xml', allowEmptyArchive: true
-            archiveArtifacts artifacts: '**/coverage.xml', allowEmptyArchive: true
-          } catch (Exception e) {
-            echo 'Error in failure handling: ' + e.toString()
+      script {
+        echo '❌ Pipeline failed! Check the logs for details.'
+        
+        // Archive additional debug information
+        bat 'echo "=== System Information ===" && systeminfo'
+        bat 'echo "=== Python Version ===" && python --version || echo "Python not found"'
+        bat 'echo "=== Pip Version ===" && pip --version || echo "Pip not found"'
+        
+        // Try to get more detailed error information
+        try {
+          if (fileExists('${WORKSPACE}\reports\bandit-report.json')) {
+            echo 'Bandit report summary:'
+            bat 'type "${WORKSPACE}\reports\bandit-report.json" | findstr /i "issue" || echo No issues found'
           }
+          
+          if (fileExists('${WORKSPACE}\reports\safety-report.json')) {
+            echo 'Safety report summary:'
+            bat 'type "${WORKSPACE}\reports\safety-report.json" | findstr /i "vulnerability" || echo No vulnerabilities found'
+          }
+        } catch (Exception e) {
+          echo 'Error while generating failure report: ' + e.toString()
         }
       }
     }
+    
     cleanup {
-      node('built-in') {
-        script {
-          try {
-            if (fileExists('docker-compose.yml')) {
-              bat 'docker-compose down --remove-orphans || echo "No containers to stop"'
-            } else {
-              echo 'No docker-compose.yml found, skipping container cleanup'
-            }
-            bat 'docker system prune -f --volumes || echo "No Docker resources to clean"'
-          } catch (Exception e) {
-            echo 'Warning: Error during Docker cleanup: ' + e.message
+      script {
+        echo 'Cleaning up workspace...'
+        
+        // Stop any running Docker containers
+        try {
+          if (fileExists('docker-compose.yml')) {
+            bat 'docker-compose down --remove-orphans --volumes --rmi local || echo No Docker Compose services to stop'
           }
+          
+          // Clean up Docker resources
+          bat 'docker system prune -f --volumes || echo No Docker resources to clean'
+          
+          // Remove any remaining containers, networks, and volumes
+          bat '@FOR /f "tokens=*" %i IN (\'docker ps -aq\') DO @docker rm -f %i || echo No containers to remove'
+          bat '@FOR /f "tokens=*" %i IN (\'docker network ls -q\') DO @docker network rm %i || echo No networks to remove'
+          bat '@FOR /f "tokens=*" %i IN (\'docker volume ls -q\') DO @docker volume rm %i || echo No volumes to remove'
+          
+        } catch (Exception e) {
+          echo 'Warning: Error during cleanup: ' + e.message
         }
       }
     }
