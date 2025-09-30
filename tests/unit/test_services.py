@@ -228,4 +228,3 @@ def test_delete_and_get_not_found(service, db_session):
         select(Appointment).where(Appointment.appointment_id == db_appt.appointment_id)
     ).first()
     assert db_appt is None, "Appointment should be deleted from database"
-

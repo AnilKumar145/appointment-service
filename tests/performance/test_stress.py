@@ -5,7 +5,7 @@ These are lightweight stress scenarios and can be scaled by increasing USERS/ROU
 
 import asyncio
 import os
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -78,4 +78,3 @@ async def test_stress_create_list_delete_cycles(app):
             await asyncio.gather(
                 *[ac.delete(f"/api/appointments/{aid}") for aid in ids]
             )
-

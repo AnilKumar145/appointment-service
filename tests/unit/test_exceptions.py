@@ -23,4 +23,3 @@ def test_exception_hierarchy_and_messages():
 
     with pytest.raises(AppointmentException):
         raise BusinessRuleViolationError("rule broken")
-

@@ -40,4 +40,3 @@ def test_appointment_status_enum_values():
         "PENDING",
     }
     assert isinstance(AppointmentStatus.SCHEDULED.value, str)
-

@@ -47,4 +47,3 @@ async def test_concurrent_creates_and_lists(app):
         assert r.status_code == 200
         body = r.json()
         assert "total" in body and body["total"] >= USERS
-

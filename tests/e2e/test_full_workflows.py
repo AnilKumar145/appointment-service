@@ -69,4 +69,3 @@ def test_full_crud_workflow(client, valid_appointment_payload):
 
     nf = client.get(f"/api/appointments/{appt_id}")
     assert nf.status_code == 404
-

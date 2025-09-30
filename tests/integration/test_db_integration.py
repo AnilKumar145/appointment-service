@@ -30,4 +30,3 @@ def test_db_create_and_query(db_session: Session):
     fetched = repo.get_by_id("APT-2025-000222")
     assert fetched is not None
     assert fetched.doctor_name == "Dr. DB"
-

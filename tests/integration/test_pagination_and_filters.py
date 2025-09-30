@@ -45,4 +45,3 @@ def test_list_by_id_paths_accepts_valid_ids(client, create_appointment, path):
         target_id = created["facility_id"]
     r = client.get(path.format(target_id))
     assert r.status_code == 200
-

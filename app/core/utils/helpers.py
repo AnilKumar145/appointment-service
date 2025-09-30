@@ -102,4 +102,3 @@ def validate_minimum_duration(
     """Validate appointment has minimum duration"""
     duration = calculate_appointment_duration(start_time, end_time)
     return duration >= min_minutes
-

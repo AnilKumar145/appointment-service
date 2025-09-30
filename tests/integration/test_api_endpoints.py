@@ -93,4 +93,3 @@ def test_available_slots(client, create_appointment):
     assert all(
         not (s["start_time"] == "10:00" and s["end_time"] == "10:30") for s in data
     )
-

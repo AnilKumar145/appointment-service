@@ -3,7 +3,7 @@
 Covers field validators: future date, end after start, non-empty names.
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 
 import pytest
 
@@ -89,4 +89,3 @@ def test_status_update_accepts_enum():
 def test_partial_update_fields_optional():
     upd = AppointmentUpdate(doctor_name="Dr. New")
     assert upd.model_dump(exclude_unset=True) == {"doctor_name": "Dr. New"}
-

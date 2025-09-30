@@ -45,4 +45,3 @@ def test_repository_crud_cycle(db_session):
     # Delete
     assert repo.delete_by_appointment_id("APT-2025-000123") is True
     assert repo.get_by_id("APT-2025-000123") is None
-

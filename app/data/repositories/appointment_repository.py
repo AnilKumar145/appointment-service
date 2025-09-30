@@ -130,4 +130,3 @@ class AppointmentRepository:
         else:
             statement = select(Appointment).where(Appointment.patient_id == patient_id)
         return len(list(self.session.exec(statement).all()))
-

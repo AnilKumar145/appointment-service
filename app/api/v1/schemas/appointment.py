@@ -143,4 +143,3 @@ class AppointmentListResponse(BaseModel):
 # Count response schemas
 class CountResponse(BaseModel):
     count: int
-

@@ -26,4 +26,3 @@ class BusinessRuleViolationError(AppointmentException):
     """Raised when business rules are violated"""
 
     pass
-

@@ -477,4 +477,3 @@ class AppointmentService:
                 f"Error converting appointment to response model: {str(e)}"
             )
             raise
-

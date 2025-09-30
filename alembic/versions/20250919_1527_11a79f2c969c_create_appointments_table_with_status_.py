@@ -7,6 +7,7 @@ Create Date: 2025-09-19 15:27:00.000000
 """
 
 from typing import Sequence, Union
+
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
@@ -117,4 +118,3 @@ def downgrade() -> None:
     except Exception:
         # Ignore if enum is still being used elsewhere
         pass
-

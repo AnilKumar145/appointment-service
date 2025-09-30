@@ -231,4 +231,3 @@ def create_appointment(client, valid_appointment_payload):
         return resp.json()
 
     return _create
-
