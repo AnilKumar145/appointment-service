@@ -4,8 +4,6 @@ Note: No role-based authorization or rate limiting is implemented in the service
 We include behavioral checks and xfail markers to document expectations once features exist.
 """
 
-import itertools
-
 import pytest
 
 
@@ -39,3 +37,4 @@ def test_rate_limiting_when_exceeded(client, valid_appointment_payload):
     for _ in range(200):
         r = client.get("/api/appointments")
     assert r.status_code == 429
+

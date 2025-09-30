@@ -1,6 +1,5 @@
 import re
 from datetime import date, datetime, time
-from enum import Enum
 from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, validator
@@ -144,3 +143,4 @@ class AppointmentListResponse(BaseModel):
 # Count response schemas
 class CountResponse(BaseModel):
     count: int
+

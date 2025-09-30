@@ -2,21 +2,19 @@ import os
 import sys
 from logging.config import fileConfig
 
+from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool
-
 from alembic import context
+
+# Load environment variables before any other imports
+load_dotenv()
 
 # Add the project root to Python path
 sys.path.append(os.getcwd())
 
-# Load environment variables
-from dotenv import load_dotenv
-
 # Import your models
-from app.data.models.appointment import Appointment, AppointmentStatus
-from app.data.models.base import SQLModel
+from app.data.models.base import SQLModel  # noqa: E402
 
-load_dotenv()
 
 # this is the Alembic Config object
 config = context.config
@@ -78,3 +76,4 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
+

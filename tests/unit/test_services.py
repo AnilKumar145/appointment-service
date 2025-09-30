@@ -3,15 +3,19 @@
 from datetime import date, datetime, time
 
 import pytest
-from sqlmodel import Session, select
+from sqlmodel import select
 
-from app.api.v1.schemas.appointment import (AppointmentCreate,
-                                            AppointmentStatusUpdate,
-                                            AppointmentUpdate)
-from app.core.exceptions.custom_exceptions import (AppointmentConflictError,
-                                                   AppointmentNotFoundError,
-                                                   BusinessRuleViolationError,
-                                                   ValidationError)
+from app.api.v1.schemas.appointment import (
+    AppointmentCreate,
+    AppointmentStatusUpdate,
+    AppointmentUpdate,
+)
+from app.core.exceptions.custom_exceptions import (
+    AppointmentConflictError,
+    AppointmentNotFoundError,
+    BusinessRuleViolationError,
+    ValidationError,
+)
 from app.core.services.appointment_service import AppointmentService
 from app.data.models.appointment import Appointment, AppointmentStatus
 
@@ -168,14 +172,14 @@ def test_update_status_invalid_transitions(service, db_session):
 
 def test_update_appointment_conflict(service, db_session):
     # Create first appointment
-    a = service.create_appointment(_valid_create_payload())
+    service.create_appointment(_valid_create_payload())
 
     # Get the actual appointment ID for the first appointment
     first_appt = db_session.exec(select(Appointment)).first()
     assert first_appt is not None, "First appointment not found in database"
 
     # Create second appointment with different time
-    b = service.create_appointment(
+    service.create_appointment(
         _valid_create_payload(
             patient_id=f"PAT-{datetime.now().year}-0002",
             appointment_start_time=time(11, 0),
@@ -202,7 +206,7 @@ def test_update_appointment_conflict(service, db_session):
 
 def test_delete_and_get_not_found(service, db_session):
     # Create an appointment
-    appt = service.create_appointment(_valid_create_payload())
+    service.create_appointment(_valid_create_payload())
 
     # Get the actual appointment from the database
     db_appt = db_session.exec(select(Appointment)).first()
@@ -224,3 +228,4 @@ def test_delete_and_get_not_found(service, db_session):
         select(Appointment).where(Appointment.appointment_id == db_appt.appointment_id)
     ).first()
     assert db_appt is None, "Appointment should be deleted from database"
+

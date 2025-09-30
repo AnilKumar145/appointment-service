@@ -7,10 +7,9 @@ Shared pytest fixtures for the appointment-service test suite.
 - Provides helper factory to build valid Appointment payloads
 """
 
-import asyncio
 import itertools
 import os
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, time
 from typing import Dict
 
 import pytest
@@ -21,7 +20,6 @@ from sqlmodel import Session, SQLModel, create_engine, text
 
 from alembic import command as alembic_command
 from alembic.config import Config as AlembicConfig
-from app.data.models.appointment import Appointment, AppointmentStatus
 from app.data.models.base import get_session as prod_get_session
 from main import app as fastapi_app
 
@@ -113,7 +111,6 @@ def _monkeypatch_helpers(monkeypatch):
     """
     from sqlmodel import select
 
-    from app.core import utils as utils_pkg
     from app.core.services import appointment_service as service_mod
     from app.core.utils import helpers as helpers_mod
     from app.data.models.appointment import Appointment
@@ -234,3 +231,4 @@ def create_appointment(client, valid_appointment_payload):
         return resp.json()
 
     return _create
+

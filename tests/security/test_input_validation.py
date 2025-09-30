@@ -7,7 +7,7 @@ Covers:
 - Edge boundaries for time and date
 """
 
-from datetime import date, time, timedelta
+from datetime import date, timedelta
 
 import pytest
 
@@ -85,3 +85,4 @@ def test_update_status_invalid_transition(client, create_appointment):
 
     r2 = client.put(f"/api/appointments/{appt_id}/status", json={"status": "SCHEDULED"})
     assert r2.status_code == 422
+

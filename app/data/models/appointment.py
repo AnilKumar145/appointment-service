@@ -1,4 +1,3 @@
-import json
 from datetime import date, datetime, time
 from enum import Enum
 from typing import Optional
@@ -60,3 +59,4 @@ class Appointment(SQLModel, table=True):
     # Timestamps
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: Optional[datetime] = Field(default=None)
+

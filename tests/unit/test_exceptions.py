@@ -2,11 +2,13 @@
 
 import pytest
 
-from app.core.exceptions.custom_exceptions import (AppointmentConflictError,
-                                                   AppointmentException,
-                                                   AppointmentNotFoundError,
-                                                   BusinessRuleViolationError,
-                                                   ValidationError)
+from app.core.exceptions.custom_exceptions import (
+    AppointmentConflictError,
+    AppointmentException,
+    AppointmentNotFoundError,
+    BusinessRuleViolationError,
+    ValidationError,
+)
 
 
 def test_exception_hierarchy_and_messages():
@@ -21,3 +23,4 @@ def test_exception_hierarchy_and_messages():
 
     with pytest.raises(AppointmentException):
         raise BusinessRuleViolationError("rule broken")
+

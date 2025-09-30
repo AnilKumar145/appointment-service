@@ -7,18 +7,24 @@ from typing import List, Optional, Tuple
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, func, select
 
-from app.api.v1.schemas.appointment import (AppointmentCreate,
-                                            AppointmentResponse,
-                                            AppointmentStatusUpdate,
-                                            AppointmentUpdate, CountResponse)
-from app.core.exceptions.custom_exceptions import (AppointmentConflictError,
-                                                   AppointmentNotFoundError,
-                                                   BusinessRuleViolationError,
-                                                   ValidationError)
-from app.core.utils.helpers import (generate_appointment_id,
-                                    validate_appointment_conflict,
-                                    validate_business_hours,
-                                    validate_minimum_duration)
+from app.api.v1.schemas.appointment import (
+    AppointmentCreate,
+    AppointmentResponse,
+    AppointmentStatusUpdate,
+    AppointmentUpdate,
+)
+from app.core.exceptions.custom_exceptions import (
+    AppointmentConflictError,
+    AppointmentNotFoundError,
+    BusinessRuleViolationError,
+    ValidationError,
+)
+from app.core.utils.helpers import (
+    generate_appointment_id,
+    validate_appointment_conflict,
+    validate_business_hours,
+    validate_minimum_duration,
+)
 from app.data.models.appointment import Appointment, AppointmentStatus
 from app.data.repositories.appointment_repository import AppointmentRepository
 
@@ -98,7 +104,7 @@ class AppointmentService:
     ) -> List[dict]:
         """Get available time slots for a doctor on a specific date - COMPLETELY FIXED"""
         try:
-            from datetime import datetime, time, timedelta
+            # Using datetime imports from the top of the file
 
             print(
                 f"🔍 Getting available slots for doctor {doctor_id} on {appointment_date}"
@@ -152,7 +158,8 @@ class AppointmentService:
                     ):
                         is_available = False
                         print(
-                            f"  Slot {slot_start_time}-{slot_end_time} conflicts with appointment {appointment.appointment_start_time}-{appointment.appointment_end_time}"
+                            f"  Slot {slot_start_time}-{slot_end_time} conflicts with "
+                            f"appointment {appointment.appointment_start_time}-{appointment.appointment_end_time}"
                         )
                         break
 
@@ -257,7 +264,8 @@ class AppointmentService:
                 try:
                     created_appointment = self.repository.create(appointment)
                     print(
-                        f"✅ Appointment saved with ID: {created_appointment.id}, AppointmentID: {created_appointment.appointment_id}"
+                        f"✅ Appointment saved with ID: {created_appointment.id}, "
+                        f"AppointmentID: {created_appointment.appointment_id}"
                     )
                     return self._to_response_model(created_appointment)
                 except IntegrityError as ie:
@@ -269,7 +277,8 @@ class AppointmentService:
                         year = datetime.now().year
                         new_id = f"APT-{year}-{random.randint(0, 9999):04d}"
                         print(
-                            f"⚠️ Collision detected on appointment_id. Retrying with {new_id} (attempt {attempt+1}/{max_retries})"
+                            f"⚠️ Collision detected on appointment_id. "
+                            f"Retrying with {new_id} (attempt {attempt+1}/{max_retries})"
                         )
                         appointment.appointment_id = new_id
                         continue
@@ -468,3 +477,4 @@ class AppointmentService:
                 f"Error converting appointment to response model: {str(e)}"
             )
             raise
+

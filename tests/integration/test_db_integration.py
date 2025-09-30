@@ -5,7 +5,6 @@ from datetime import date, time
 from sqlmodel import Session
 
 from app.data.models.appointment import Appointment
-from app.data.models.base import create_db_and_tables
 from app.data.repositories.appointment_repository import AppointmentRepository
 
 
@@ -31,3 +30,4 @@ def test_db_create_and_query(db_session: Session):
     fetched = repo.get_by_id("APT-2025-000222")
     assert fetched is not None
     assert fetched.doctor_name == "Dr. DB"
+

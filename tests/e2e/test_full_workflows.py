@@ -9,8 +9,6 @@ Flow covered:
 6) Delete and ensure not found
 """
 
-from datetime import date, time
-
 
 def test_full_crud_workflow(client, valid_appointment_payload):
     # 1) Create
@@ -71,3 +69,4 @@ def test_full_crud_workflow(client, valid_appointment_payload):
 
     nf = client.get(f"/api/appointments/{appt_id}")
     assert nf.status_code == 404
+

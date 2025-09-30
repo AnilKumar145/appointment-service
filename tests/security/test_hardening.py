@@ -1,8 +1,6 @@
 """Security hardening tests: malformed content, oversized payloads, invalid enums, and path injection attempts."""
 
 import json
-import os
-
 import pytest
 
 
@@ -64,3 +62,4 @@ def test_oversized_payload_is_rejected_or_safely_handled(
     resp = client.post("/api/appointments", json=payload)
     # Depending on server/client defaults, accept 413 (Payload Too Large), 422, or 201 if accepted
     assert resp.status_code in (413, 422, 201)
+

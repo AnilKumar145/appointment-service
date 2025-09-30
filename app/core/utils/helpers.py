@@ -1,4 +1,3 @@
-import base64
 from datetime import date, datetime, time
 from typing import Optional
 
@@ -17,7 +16,7 @@ def generate_appointment_id(session) -> str:
         result = session.exec(
             text(
                 """
-                SELECT COUNT(*) FROM appointments 
+                SELECT COUNT(*) FROM appointments
                 WHERE appointment_id LIKE :pattern
                 """
             ),
@@ -47,8 +46,8 @@ def validate_appointment_conflict(
     """Check if appointment conflicts with existing appointments for same doctor"""
     try:
         query = """
-            SELECT COUNT(*) FROM appointments 
-            WHERE doctor_id = :doctor_id 
+            SELECT COUNT(*) FROM appointments
+            WHERE doctor_id = :doctor_id
             AND appointment_date = :appointment_date
             AND status IN ('SCHEDULED', 'PENDING')
             AND (
@@ -103,3 +102,4 @@ def validate_minimum_duration(
     """Validate appointment has minimum duration"""
     duration = calculate_appointment_duration(start_time, end_time)
     return duration >= min_minutes
+

@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 from sqlmodel import Session, select
 
@@ -130,3 +130,4 @@ class AppointmentRepository:
         else:
             statement = select(Appointment).where(Appointment.patient_id == patient_id)
         return len(list(self.session.exec(statement).all()))
+

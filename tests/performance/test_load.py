@@ -6,8 +6,7 @@ without external tooling. Scale the `USERS` value to increase load.
 
 import asyncio
 import os
-import uuid
-from datetime import date, datetime, time
+from datetime import date, datetime
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -48,3 +47,4 @@ async def test_concurrent_creates_and_lists(app):
         assert r.status_code == 200
         body = r.json()
         assert "total" in body and body["total"] >= USERS
+

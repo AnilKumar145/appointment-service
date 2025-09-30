@@ -54,3 +54,4 @@ def test_expired_jwt_token_rejected(client, valid_appointment_payload):
         "/api/appointments", json=valid_appointment_payload, headers=headers
     )
     assert resp.status_code == 401
+

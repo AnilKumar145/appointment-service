@@ -37,7 +37,6 @@
 import os
 
 from dotenv import load_dotenv
-from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel import Session, SQLModel, create_engine
 
 load_dotenv()
@@ -63,3 +62,4 @@ def create_db_and_tables():
 def get_session():
     with Session(engine) as session:
         yield session
+

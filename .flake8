@@ -1,5 +1,10 @@
 [flake8]
-exclude = .git,__pycache__,venv,env,.venv,site-packages
+exclude = .git,__pycache__,venv,env,.venv,site-packages,alembic/versions/*.py
+max-line-length = 120
 per-file-ignores =
     # Ignore F821 in all files (if needed)
     __init__.py: F401
+    # Ignore E501 in test files
+    tests/*.py: E501
+    # Ignore E501 in migrations
+    alembic/versions/*.py: E501

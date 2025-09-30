@@ -1,7 +1,5 @@
 """Integration tests for FastAPI endpoints in `app/api/v1/endpoints/appointments.py`."""
 
-from datetime import date, time
-
 
 def test_root_and_health(client):
     r = client.get("/")
@@ -95,3 +93,4 @@ def test_available_slots(client, create_appointment):
     assert all(
         not (s["start_time"] == "10:00" and s["end_time"] == "10:30") for s in data
     )
+

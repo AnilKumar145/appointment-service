@@ -46,3 +46,4 @@ def test_list_contract_shape(client, create_appointment):
     assert set(body.keys()) == {"appointments", "total", "skip", "limit"}
     assert isinstance(body["appointments"], list)
     assert isinstance(body["total"], int)
+
