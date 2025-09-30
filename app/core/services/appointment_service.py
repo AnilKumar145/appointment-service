@@ -7,24 +7,18 @@ from typing import List, Optional, Tuple
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, func, select
 
-from app.api.v1.schemas.appointment import (
-    AppointmentCreate,
-    AppointmentResponse,
-    AppointmentStatusUpdate,
-    AppointmentUpdate,
-)
-from app.core.exceptions.custom_exceptions import (
-    AppointmentConflictError,
-    AppointmentNotFoundError,
-    BusinessRuleViolationError,
-    ValidationError,
-)
-from app.core.utils.helpers import (
-    generate_appointment_id,
-    validate_appointment_conflict,
-    validate_business_hours,
-    validate_minimum_duration,
-)
+from app.api.v1.schemas.appointment import (AppointmentCreate,
+                                            AppointmentResponse,
+                                            AppointmentStatusUpdate,
+                                            AppointmentUpdate)
+from app.core.exceptions.custom_exceptions import (AppointmentConflictError,
+                                                   AppointmentNotFoundError,
+                                                   BusinessRuleViolationError,
+                                                   ValidationError)
+from app.core.utils.helpers import (generate_appointment_id,
+                                    validate_appointment_conflict,
+                                    validate_business_hours,
+                                    validate_minimum_duration)
 from app.data.models.appointment import Appointment, AppointmentStatus
 from app.data.repositories.appointment_repository import AppointmentRepository
 
