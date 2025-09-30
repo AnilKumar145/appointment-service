@@ -1,0 +1,5 @@
+[flake8]
+exclude = .git,__pycache__,venv,env,.venv,site-packages
+per-file-ignores =
+    # Ignore F821 in all files (if needed)
+    __init__.py: F401
