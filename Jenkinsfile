@@ -85,7 +85,8 @@ pipeline {
           try {
             bat """
               ${pythonExe} -m venv ${VENV_PATH}
-              ${PIP} install --upgrade pip setuptools wheel
+              ${PIP} install --upgrade pip
+              ${PIP} install --upgrade setuptools wheel
               ${PIP} install -r requirements.txt
               ${PIP} install -r requirements-dev.txt
             """
@@ -136,13 +137,14 @@ pipeline {
         stage('Bandit Security Scan') {
           steps {
             script {
-              // Ensure bandit is installed with PBR support
-              bat """
-                ${PIP} uninstall -y bandit || echo 'Bandit not installed'
-                ${PIP} install -U pip setuptools wheel
-                ${PIP} install 'bandit[pbr]' --no-cache-dir
-                ${PYTHON} -m bandit -r . -ll || echo 'Bandit scan completed with findings (non-blocking)'
-              """.stripIndent()
+              catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+                bat """
+                  ${PIP} uninstall -y bandit || echo 'Bandit not installed'
+                  ${PIP} install --upgrade pip
+                  ${PIP} install bandit --no-cache-dir
+                  ${PYTHON} -m bandit -r . -ll || echo 'Bandit scan completed with findings (non-blocking)'
+                """
+              }
             }
           }
         }
